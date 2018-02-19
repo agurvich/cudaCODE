@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "hello.h"
 
-
 # define UROUND (2.22e -16)
 # define SAFETY 0.9
 # define PGROW ( -0.2)
@@ -15,7 +14,7 @@ intDriver ( const double t, const double tEnd , const int numODE ,
             const int NEQN,
             const double * gGlobal , double * yGlobal ) {
 	// unique thread ID , based on local ID in block and block ID
-	int tid = threadIdx .x + ( blockDim .x * blockIdx .x);
+	int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
 
 	// ensure thread within limit
         // (ABG): Each thread is given a system to work on
@@ -58,6 +57,9 @@ intDriver ( const double t, const double tEnd , const int numODE ,
 	
  	// integrate until specified end time
         while (t < tEnd ) {
+                // for implicit solver, there would be a step size estimate here
+                // maybe every 25 steps or something so overhead is invested so that
+                // you don't reject steps as often. 
 		
  		// limit step size based on remaining time
  		h = fmin ( tEnd - t, h);
@@ -68,10 +70,11 @@ intDriver ( const double t, const double tEnd , const int numODE ,
  		// evaluate derivative
  		double F[ NEQN ];
                 //(* TODO implement this *)
+                // function that takes the state and finds the derivative at the current time
  		dydt (t, y, g, F);
 		
  		// take a trial step
-                //(* TODO implement this *)
+        //(* TODO implement this *)
  		rkckStep (t, y, g, F, h, yTemp , yErr );
 		
  		// calculate error
@@ -105,7 +108,7 @@ intDriver ( const double t, const double tEnd , const int numODE ,
  			// ensure step size is bounded
  			h = fmax (hMin , fmin (hMax , h));
  			for (int i = 0; i < NEQN ; ++i)
- 			y[i] = yTemp [i];
+ 				y[i] = yTemp [i];
  		}
  	}
  }
