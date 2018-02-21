@@ -19,6 +19,12 @@ intDriver ( const double t, const double tEnd , const int numODE ,
 	// ensure thread within limit
         // (ABG): Each thread is given a system to work on
 	if (tid < numODE ) {
+                
+                // for coupling elements, let's just do granular time steps here
+                // and assume systems are constant within the integrator, will 
+                // call integrator multiple times between t and tEnd
+                // coupling matrix, pass stuff around as necessary
+                // TODO
 
 	 	// local array with initial values
 		double yLocal [ NEQN ];
@@ -29,7 +35,6 @@ intDriver ( const double t, const double tEnd , const int numODE ,
 
 	 	// load local array with initial values from global array
 	 	for (int i = 0; i < NEQN ; ++i) {
-                // (ABG): super un-coalesced easily fixed?  
 	 		yLocal [i] = yGlobal [tid + numODE * i];
 		}
 
@@ -37,12 +42,19 @@ intDriver ( const double t, const double tEnd , const int numODE ,
 	 	rkckDriver(t, tEnd , yLocal , gLocal );
 	 	// update global array with integrated values
 	 	for (int i = 0; i < NEQN ; ++i) {
-                // (ABG): super un-coalesced easily fixed?  
 	 		yGlobal [tid + numODE * i] = yLocal [i];
 	 	}
 	 }
 }
 
+
+ __device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN){
+    for (int i=0; i < NEQN; i++){
+       yTemp[i]=y[i]+F[i]*h;
+       // assume riemann is super awesome
+       yErr[i]=0;
+    }
+ }
 
  __device__ void
  rkckDriver ( double t, const double tEnd , const double g,
@@ -71,17 +83,24 @@ intDriver ( const double t, const double tEnd , const int numODE ,
  		double F[ NEQN ];
                 //(* TODO implement this *)
                 // function that takes the state and finds the derivative at the current time
- 		dydt (t, y, g, F);
+
+                // for coupling just look within y!!! don't need to couple elements *yet*
+ 		dydt (t, y, g, F, NEQN);
 		
  		// take a trial step
-        //(* TODO implement this *)
- 		rkckStep (t, y, g, F, h, yTemp , yErr );
+ 		riemannStep (y, F, h, yTemp , yErr, NEQN);
+ 		//rk4Step (t, y, g, F, h, yTemp , yErr );
+ 		//rkckStep (t, y, g, F, h, yTemp , yErr );
 		
  		// calculate error
  		double err = 0.0;
  		int nanFlag = 0;
  		for (int i = 0; i < NEQN ; ++i) {
  			if ( isnan ( yErr [i])) nanFlag = 1;
+                        // when we take the max, we necessarily limit each set of equations to proceed
+                        // at the rate of the *slowest* equation. If we relax this constraint (and maybe 
+                        // give each equation its own thread, we could see some serious optimization if 
+                        // shared memory was used correctly
  			err = fmax (err , fabs ( yErr [i] / ( fabs (y[i]) + fabs (h * F[i]) + TINY )));
  		}
  		err /= eps ;
@@ -103,6 +122,7 @@ intDriver ( const double t, const double tEnd , const int numODE ,
  				h = SAFETY * h * pow(err , PGROW );
  			}
  			else {
+                        // TODO if using Riemann integrator make sure to not increase step
  				h *= 5.0;
  			}
  			// ensure step size is bounded
