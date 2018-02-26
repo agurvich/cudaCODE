@@ -12,5 +12,3 @@ CUDEPS		:= hello_kernel.cu;
 
 hellomake: hello.cu hello_kernel.cu; nvcc -arch=sm_20 -o $(EXECUTABLE) $(CUFILES) $(CUDEPS) 
 
-clean: 
-	rm hello #*.o

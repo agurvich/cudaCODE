@@ -1,7 +1,7 @@
 
 __global__ void intDriver ( const double t, const double tEnd , const int numODE , 
             const int NEQN,
-            double * gGlobal , double * yGlobal ) ;
+            const double * gGlobal , double * yGlobal ) ;
 
 //__device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN);
 //__device__ void dydt(double t, double * y, double * g, double * F, int NEQN);

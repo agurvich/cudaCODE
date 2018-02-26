@@ -67,17 +67,6 @@ __device__ void
                 // for coupling just look within y!!! don't need to couple elements *yet*
  		dydt (t, y, g, F, NEQN);
 		
-                /*
-                if (threadIdx.x == 0) printf("y[0] %.2f\n",y[0]);
-                if (threadIdx.x == 0) printf("F[0] %.2f\n",F[0]);
-                if (threadIdx.x == 0) printf("g[0] %.2f\n",g[0]);
-
-
-                if (threadIdx.x == 0) printf("y[1] %.2f\n",y[1]);
-                if (threadIdx.x == 0) printf("F[1] %.2f\n",F[1]);
-                if (threadIdx.x == 0) printf("g[1] %.2f\n",g[1]);
-                */
-
  		// take a trial step
  		riemannStep (y, F, h, yTemp , yErr, NEQN);
  		//rk4Step (t, y, g, F, h, yTemp , yErr );
@@ -126,11 +115,7 @@ __device__ void
 __global__ void
 intDriver ( const double t, const double tEnd , const int numODE , 
             const int NEQN,
-            double * gGlobal , double * yGlobal ) {
-
-        
-        if (threadIdx.x == 0) printf("gGlobal[0] %.2f\n",gGlobal[0]);
-        if (threadIdx.x == 0) printf("gGlobal[1] %.2f\n",gGlobal[1]);
+            const double * gGlobal , double * yGlobal ) {
 	// unique thread ID , based on local ID in block and block ID
 	int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
 

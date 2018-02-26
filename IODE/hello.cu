@@ -27,16 +27,38 @@ int main(int argc, char** argv) {
     int NEQN;
 
     // the actual equations
+<<<<<<< HEAD
     double ** y;
     double * g;
 
     //This will initiallize stuff by reading the input file.
     parseInputs(argv[1], y, g, &NEQN, &numODE);
+=======
+    //double ** y = 
+    //double * g = 
+
+    double y[2];
+    double g[2];
+    y[0] = 2.4;
+    y[1] = 0.2; // cycles per second, matches spring constant
+
+    g[0] = 0;
+    g[1] = 0.2;
+
+    double tEnd = 10;//seconds
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
 
 
     // Format host matrix into 1-d array
     double * yHost ;
     yHost = ( double *) malloc ( numODE * NEQN * sizeof ( double ));
+<<<<<<< HEAD
+=======
+    yHost[0] = y[0];
+    yHost[1] = y[1];
+
+    /*
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
 
     for (int i = 0; i < numODE ; ++i) {
         for (int j = 0; j < NEQN ; ++j) {
@@ -81,6 +103,14 @@ int main(int argc, char** argv) {
          // transfer memory back to CPU
         cudaMemcpy (yHost , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
         
+<<<<<<< HEAD
+=======
+        for (int j=0; j<NEQN; j++){
+            printf("r = %.2f",y[0]);
+            printf("phi = %.2f",y[1]);
+        }
+        
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
         t = tNext ;
         tNext += h;
     }
