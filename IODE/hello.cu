@@ -10,6 +10,7 @@
 // includes, kernels
 #include "hello.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // declarations, forward
 
@@ -20,14 +21,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv) {
     // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 
+    int numODE;
 
     // number of equations, e.g. 157
-    int NEQN = 
+    int NEQN;
 
     // the actual equations
-    double ** y = 
-    double * g = 
+    double ** y;
+    double * g;
+
+    //This will initiallize stuff by reading the input file.
+    parseInputs(argv[1], y, g, &NEQN, &numODE);
+
 
     // Format host matrix into 1-d array
     double * yHost ;
