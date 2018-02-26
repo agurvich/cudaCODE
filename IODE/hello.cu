@@ -46,6 +46,9 @@ int main(int argc, char** argv) {
     g[1] = 0.2;
 
     double tEnd = 10;//seconds
+<<<<<<< HEAD
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
+=======
 >>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
 
 
@@ -104,12 +107,18 @@ int main(int argc, char** argv) {
         cudaMemcpy (yHost , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
         
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
         for (int j=0; j<NEQN; j++){
             printf("r = %.2f",y[0]);
             printf("phi = %.2f",y[1]);
         }
         
+<<<<<<< HEAD
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
+=======
 >>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
         t = tNext ;
         tNext += h;
