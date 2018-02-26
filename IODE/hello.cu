@@ -34,6 +34,7 @@ int main(int argc, char** argv) {
     // the actual equations
     //double ** y = 
     //double * g = 
+    parseInputs(argv[1], y, g, &NEQN, &numODE);
 
     double y[2];
     double g[2];
