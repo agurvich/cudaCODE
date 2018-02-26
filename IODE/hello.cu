@@ -32,8 +32,12 @@ int main(int argc, char** argv) {
     int NEQN = 2;
 
     // the actual equations
-    //double ** y = 
-    //double * g = 
+    double ** y;
+    double * g;
+
+    //This will initiallize stuff by reading the input file.
+    parseInputs(argv[1], y, g, &NEQN, &numODE);
+
 
     double y[2];
     double g[2];
