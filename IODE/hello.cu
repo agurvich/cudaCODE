@@ -47,6 +47,9 @@ int main(int argc, char** argv) {
 
     double tEnd = 10;//seconds
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
+=======
 >>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
 =======
 >>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
@@ -108,7 +111,10 @@ int main(int argc, char** argv) {
         
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
 =======
 >>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
         for (int j=0; j<NEQN; j++){
@@ -117,6 +123,9 @@ int main(int argc, char** argv) {
         }
         
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
+=======
 >>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
 =======
 >>>>>>> parent of 252a28a... copying memory correctly, need to check whether integral is correct
