@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
     }
 
     // copy host arrays to device
+
     cudaMemcpy((void *)d_A,A, memsize,cudaMemcpyHostToDevice);
     cudaMemcpy((void *)d_B,B, memsize,cudaMemcpyHostToDevice);
     cudaMemcpy((void *)d_C,C, memsize,cudaMemcpyHostToDevice);

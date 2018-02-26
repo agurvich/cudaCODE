@@ -12,6 +12,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // declarations, forward
+double * allocateDeviceAndCopy(double * hostPointer,int memsize){
+    double * devicePointer;
+    cudaMalloc (( void **) & devicePointer , memsize);
+    cudaMemcpy ( devicePointer , hostPointer ,memsize, cudaMemcpyHostToDevice );
+    return devicePointer;
+}
 
 //extern "C"
 
@@ -34,10 +40,10 @@ int main(int argc, char** argv) {
     y[0] = 2.4;
     y[1] = 0.2; // cycles per second, matches spring constant
 
-    g[0] = 0;
+    g[0] = 0.2;
     g[1] = 0.2;
 
-    double tEnd = 10;//seconds
+    double tEnd = .5;//seconds
 
     double t0 = 0;
     double h = 0.1;// seconds
@@ -48,6 +54,11 @@ int main(int argc, char** argv) {
     yHost[0] = y[0];
     yHost[1] = y[1];
 
+    double * gHost;
+    gHost = (double *) malloc ( NEQN * sizeof(double));
+    gHost[0] = g[0];
+    gHost[1] = g[1];
+
     /*
 
     for (int i = 0; i < numODE ; ++i) {
@@ -57,12 +68,11 @@ int main(int argc, char** argv) {
     }
     */
 
-    // allocate memory on the device
+    // allocate memory on the device and copy over
     double * yDevice ;
-    cudaMalloc (( void **) & yDevice , numODE * NEQN * sizeof ( double ));
-    
+    yDevice = allocateDeviceAndCopy(yHost,numODE * NEQN * sizeof ( double ));
     double * gDevice ;
-    cudaMalloc (( void **) & gDevice , numODE * sizeof ( double ));
+    gDevice = allocateDeviceAndCopy(gHost,NEQN * sizeof ( double ));
 
     // setup grid dimensions
     int blockSize ;
@@ -78,29 +88,40 @@ int main(int argc, char** argv) {
     else {
         blockSize = 512;
     }
+
+    printf("%d threads/block\n",blockSize);
     dim3 dimBlock ( blockSize , 1);
-    dim3 dimGrid ( numODE / dimBlock .x, 1);
+    printf("%d blocks\n",numODE/dimBlock.x);
+    dim3 dimGrid ( numODE / dimBlock .x+1, 1);
 
     // set initial time
     double t = t0;
     double tNext = t + h;
     
+    printf("before intDriver %.2f %.2f\n",g[0],g[1]);
     while (t < tEnd ) {
         // transfer memory to GPU
-        cudaMemcpy ( yDevice , yHost , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
+        if (t!=t0){
+            cudaMemcpy ( yDevice , yHost , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
+            cudaMemcpy ( gDevice , gHost , NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
+        }
         
         intDriver <<<dimGrid , dimBlock >>> (t, tNext , numODE , NEQN, gDevice , yDevice );
         
          // transfer memory back to CPU
         cudaMemcpy (yHost , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
-        
-        for (int j=0; j<NEQN; j++){
-            printf("r = %.2f",y[0]);
-            printf("phi = %.2f",y[1]);
-        }
-        
+        cudaMemcpy (gHost , gDevice , NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
+         
         t = tNext ;
         tNext += h;
+    }
+    printf("after intDriver %.2f %.2f\n",g[0],g[1]);
+
+    // for each system
+    for (int j=0; j<numODE; j++){
+        for (int i=0; i<NEQN;i++){
+            printf("y[%d] = %.2f\n",i,yHost[i+2*j]);
+        }
     }
     
      cudaFree ( gDevice );
