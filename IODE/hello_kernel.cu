@@ -37,6 +37,23 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
     }
  }
 
+__device__ void rk4Step(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN){
+    for (int i=0; i < NEQN; i++){
+
+    /*
+        k0 = F[i];
+        k1 = <<<launch a new kernel?>>>dydt(t,y+k0*h/4)
+        k2 = dydt(t,y+k1*h/2)
+        k3 = dydt(t,y+k2*3/4*h)
+        
+        yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)*h;
+
+        yErr[i]=0;
+
+    */
+    }
+}
+
 __device__ void
  rkckDriver ( double t, const double tEnd , double * g,
  double * y, int NEQN) {
@@ -65,16 +82,24 @@ __device__ void
 
                 // function that takes the state and finds the derivative at the current time
                 // for coupling just look within y!!! don't need to couple elements *yet*
- 		dydt (t, y, g, F, NEQN);
-		
+
+
+ 		//dydt (t, y, g, F, NEQN);
+///////////////////////////////// here is where you define your equations, one for each of NEQN
+                F[0] = 1;
+                F[1] = (y[0]+g[1]*t)*y[1];
+///////////////////////////////// 
+
                 /*
-                if (threadIdx.x == 0) printf("y[0] %.2f\n",y[0]);
-                if (threadIdx.x == 0) printf("F[0] %.2f\n",F[0]);
+                if (threadIdx.x == 0) printf("t %.2f\t",t);
+                if (threadIdx.x == 0) printf("y[0] %.2f\t",y[0]);
+                if (threadIdx.x == 0) printf("F[0] %.2f (%.2f)\t",F[0],1.0);
                 if (threadIdx.x == 0) printf("g[0] %.2f\n",g[0]);
 
 
-                if (threadIdx.x == 0) printf("y[1] %.2f\n",y[1]);
-                if (threadIdx.x == 0) printf("F[1] %.2f\n",F[1]);
+                if (threadIdx.x == 0) printf("t %.2f\t",t);
+                if (threadIdx.x == 0) printf("y[1] %.2f\t",y[1]);
+                if (threadIdx.x == 0) printf("F[1] %.2f (%.2f)\t",F[1],y[0]+2*t-y[1]);
                 if (threadIdx.x == 0) printf("g[1] %.2f\n",g[1]);
                 */
 
@@ -129,8 +154,8 @@ intDriver ( const double t, const double tEnd , const int numODE ,
             double * gGlobal , double * yGlobal ) {
 
         
-        if (threadIdx.x == 0) printf("gGlobal[0] %.2f\n",gGlobal[0]);
-        if (threadIdx.x == 0) printf("gGlobal[1] %.2f\n",gGlobal[1]);
+        //if (threadIdx.x == 0) printf("gGlobal[0] %.2f\n",gGlobal[0]);
+        //if (threadIdx.x == 0) printf("gGlobal[1] %.2f\n",gGlobal[1]);
 	// unique thread ID , based on local ID in block and block ID
 	int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
 

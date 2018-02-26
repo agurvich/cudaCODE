@@ -41,16 +41,16 @@ int main(int argc, char** argv) {
 
     double y[2];
     double g[2];
-    y[0] = 2.4;
-    y[1] = 0.2; // cycles per second, matches spring constant
+    y[0] = 0;
+    y[1] = 1; // cycles per second, matches spring constant
 
-    g[0] = 0.2;
-    g[1] = 0.2;
+    g[0] = 1;
+    g[1] = 2;
 
-    double tEnd = .5;//seconds
+    double tEnd = 1;//seconds
 
     double t0 = 0;
-    double h = 0.1;// seconds
+    double h = 0.001;// seconds
 
     // Format host matrix into 1-d array
     double * yHost ;
@@ -93,16 +93,16 @@ int main(int argc, char** argv) {
         blockSize = 512;
     }
 
-    printf("%d threads/block\n",blockSize);
+    //printf("%d threads/block\n",blockSize);
     dim3 dimBlock ( blockSize , 1);
-    printf("%d blocks\n",numODE/dimBlock.x);
+    //printf("%d blocks\n",numODE/dimBlock.x);
     dim3 dimGrid ( numODE / dimBlock .x+1, 1);
 
     // set initial time
     double t = t0;
     double tNext = t + h;
     
-    printf("before intDriver %.2f %.2f\n",g[0],g[1]);
+    //printf("before intDriver %.2f %.2f\n",g[0],g[1]);
     while (t < tEnd ) {
         // transfer memory to GPU
         if (t!=t0){
@@ -115,18 +115,22 @@ int main(int argc, char** argv) {
          // transfer memory back to CPU
         cudaMemcpy (yHost , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
         cudaMemcpy (gHost , gDevice , NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
+
+        // for each system
+        for (int j=0; j<numODE; j++){
+            printf("%.4f ",t);
+            for (int i=0; i<NEQN;i++){
+                printf("%.4f ",yHost[i+2*j]);
+        }
+        printf("\n");
+    }
+
+
          
         t = tNext ;
         tNext += h;
     }
-    printf("after intDriver %.2f %.2f\n",g[0],g[1]);
-
-    // for each system
-    for (int j=0; j<numODE; j++){
-        for (int i=0; i<NEQN;i++){
-            printf("y[%d] = %.2f\n",i,yHost[i+2*j]);
-        }
-    }
+    //printf("after intDriver %.2f %.2f\n",g[0],g[1]); 
     
      cudaFree ( gDevice );
      cudaFree ( yDevice );
