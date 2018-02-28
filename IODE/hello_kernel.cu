@@ -39,6 +39,8 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
  }
 
 __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  double * yTemp, double *  yErr,int NEQN){
+    //USING THIS: https://rosettacode.org/wiki/Runge-Kutta_method#C
+    
     double tempF[2];
     double tempY[2];
     double tempTime = t + h;
