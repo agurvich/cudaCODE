@@ -14,18 +14,19 @@
 const float eps = 1.0e-10;
 
 
-#define EQUIL_LENGTH = 2
-#define SPRING_CONSTANT = .04 // 1/25 -> w = 0.2 cycles per second
+#define EQUIL_LENGTH 2
+#define SPRING_CONSTANT .04 // 1/25 -> w = 0.2 cycles per second
 
 __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
     // r equation
-    //F[0] = g[1]*SPRING_CONSTANT*(y[0]-EQUIL_LENGTH) + g[0];
-    F[0] = 0.2*2*(y[0]-.04);
+    F[0] = g[1]*SPRING_CONSTANT*(y[0]-EQUIL_LENGTH) + g[0];
+    //F[0] = .2*2*(y[0]-.04);
 
     // phi equation
     F[1] = g[1];
 }
 
+ 
 
 
 
@@ -37,20 +38,38 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
     }
  }
 
-__device__ void rk4Step(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN){
+__device__ void rk4Step(double t, double * y, double * F, double h, double* g,  double * yTemp, double *  yErr,int NEQN){
+    double tempF[2];
+    double tempY[2];
+    double tempTime = t + h;
     for (int i=0; i < NEQN; i++){
-
-    /*
-        k0 = F[i];
-        k1 = <<<launch a new kernel?>>>dydt(t,y+k0*h/4)
-        k2 = dydt(t,y+k1*h/2)
-        k3 = dydt(t,y+k2*3/4*h)
         
-        yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)*h;
+        double k0 = h * F[i];
 
-        yErr[i]=0;
+        tempY[0] = y[0] + k0 / 2;
+        tempY[1] = y[1] + k0 / 2;
+        //f(t+ (h/2), y[i] + k0 / 2
+        dydt(t+h/2,tempY, g, tempF, NEQN);
+        double k1 = h * tempF[i];
+        
 
-    */
+        tempY[0] = y[0] + k1 / 2;
+        tempY[1] = y[1] + k1 / 2;
+        //f(t + (h/2), y[i] + k1 / 2)
+        dydt(t+h/2,tempY, g, tempF, NEQN);
+        double k2 = h * tempF[i];
+        
+
+        tempY[0] = y[0] + k2;
+        tempY[1] = y[1] + k2;
+        //f(t + h, y[i] + k2
+        dydt(t+h, tempY, g, tempF, NEQN);
+        double k3 = h * tempF[i];
+        
+        yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)/6;
+
+        yErr[i]= yTemp[i]/(pow(tempTime*tempTime / 4 + 1, 2)) - 1;
+        printf("Error is %2f", yErr[i]);
     }
 }
 
@@ -104,8 +123,8 @@ __device__ void
                 */
 
  		// take a trial step
- 		riemannStep (y, F, h, yTemp , yErr, NEQN);
- 		//rk4Step (t, y, g, F, h, yTemp , yErr );
+ 		//riemannStep (y, F, h, yTemp , yErr, NEQN);
+ 		rk4Step (t, y, F, h, g, yTemp , yErr, NEQN);
  		//rkckStep (t, y, g, F, h, yTemp , yErr );
 		
  		// calculate error

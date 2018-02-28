@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     double tEnd = 1;//seconds
 
     double t0 = 0;
-    double h = 0.001;// seconds
+    double h = 0.1;// seconds
 
     // Format host matrix into 1-d array
     double * yHost ;
