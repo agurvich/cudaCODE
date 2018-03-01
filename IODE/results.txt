@@ -1,2 +1,149 @@
-h is 0.000000 inside loop
-0.0000 0.0000 1.0000 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.050000(yTemp[0]) / (pow(1072798105 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.002545(yTemp[1]) / (pow(1072798105 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.000000 will now be 0.050000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.100000(yTemp[0]) / (pow(1072798105 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.012858(yTemp[1]) / (pow(1072798105 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.050000 will now be 0.100000
+0.0000 0.1000 1.0129 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.150000(yTemp[0]) / (pow(1 * 858993460 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.031184(yTemp[1]) / (pow(1 * 858993460 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.100000 will now be 0.150000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.200000(yTemp[0]) / (pow(1 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.057965(yTemp[1]) / (pow(1 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.150000 will now be 0.200000
+0.1000 0.2000 1.0580 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.250000(yTemp[0]) / (pow(1072798105 * 0 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.093856(yTemp[1]) / (pow(1072798105 * 0 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.200000 will now be 0.250000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.300000(yTemp[0]) / (pow(1072798105 * 858993459 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.139757(yTemp[1]) / (pow(1072798105 * 858993459 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.250000 will now be 0.300000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.350000(yTemp[0]) / (pow(1072798105 * 1717986918 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.196849(yTemp[1]) / (pow(1072798105 * 1717986918 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.300000 will now be 0.350000
+0.2000 0.3500 1.1968 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.400000(yTemp[0]) / (pow(1 * 1717986919 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.260135(yTemp[1]) / (pow(1 * 1717986919 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.300000 will now be 0.350000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.450000(yTemp[0]) / (pow(1 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.337201(yTemp[1]) / (pow(1 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.350000 will now be 0.400000
+0.3000 0.4500 1.3372 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.500000(yTemp[0]) / (pow(1072798105 * -858993459 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.430212(yTemp[1]) / (pow(1072798105 * -858993459 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.400000 will now be 0.450000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.550000(yTemp[0]) / (pow(1072798105 * 0 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.541898(yTemp[1]) / (pow(1072798105 * 0 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.450000 will now be 0.500000
+0.4000 0.5500 1.5419 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.600000(yTemp[0]) / (pow(1 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.675706(yTemp[1]) / (pow(1 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.500000 will now be 0.550000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.650000(yTemp[0]) / (pow(1 * 858993460 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 1.835993(yTemp[1]) / (pow(1 * 858993460 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.550000 will now be 0.600000
+0.5000 0.6500 1.8360 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.700000(yTemp[0]) / (pow(1072798105 * -858993459 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 2.028295(yTemp[1]) / (pow(1072798105 * -858993459 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.600000 will now be 0.650000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.750000(yTemp[0]) / (pow(1072798105 * 1717986919 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 2.259692(yTemp[1]) / (pow(1072798105 * 1717986919 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.650000 will now be 0.700000
+0.6000 0.7500 2.2597 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.800000(yTemp[0]) / (pow(1 * 0 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 2.539311(yTemp[1]) / (pow(1 * 0 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.700000 will now be 0.750000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.850000(yTemp[0]) / (pow(1 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 2.879049(yTemp[1]) / (pow(1 * -1717986918 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.750000 will now be 0.800000
+0.7000 0.8500 2.8790 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.900000(yTemp[0]) / (pow(1072798105 * 858993459 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 3.294594(yTemp[1]) / (pow(1072798105 * 858993459 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.800000 will now be 0.850000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 0.950000(yTemp[0]) / (pow(1072798105 * -858993459 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 3.806953(yTemp[1]) / (pow(1072798105 * -858993459 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.850000 will now be 0.900000
+0.8000 0.9500 3.8070 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 1.000000(yTemp[0]) / (pow(1 * 1717986918 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 4.444762(yTemp[1]) / (pow(1 * 1717986918 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.900000 will now be 0.950000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 1.050000(yTemp[0]) / (pow(1 * 0 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 5.247930(yTemp[1]) / (pow(1 * 0 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 0.950000 will now be 1.000000
+0.9000 1.0500 5.2479 
+I calculated the error to be:
+ 0.000000(yErr[0]) = 1.100000(yTemp[0]) / (pow(1072798105 * -858993460 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 6.273628(yTemp[1]) / (pow(1072798105 * -858993460 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 1.000000 will now be 1.050000
+I calculated the error to be:
+ 0.000000(yErr[0]) = 1.150000(yTemp[0]) / (pow(1072798105 * -1717986919 (tempTime) / 4 + 1, 2)) - 1
+I calculated the error to be:
+ 0.000000(yErr[1]) = 7.606664(yTemp[1]) / (pow(1072798105 * -1717986919 (tempTime) / 4 + 1, 2)) - 1
+Error is calculated to be 0.000000
+Step accepted, t = 1.050000 will now be 1.100000
+1.0000 1.1500 7.6067 

@@ -46,8 +46,8 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
     //USING THIS: https://rosettacode.org/wiki/Runge-Kutta_method#C
     double tempF[2];
     double tempY[2];
-    double tempTime = t + h;
-    //printf("Entering rk4Step for time = %f\n", t);
+    //double tempTime = t + h;
+    //printf("Entering rk4Step for time = %f and h = %f\n", t, h);
     for (int i=0; i < NEQN; i++){
         
         double k0 = h * F[i];
@@ -80,10 +80,11 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         __syncthreads();
         yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)/6;
 
-        yErr[i]= yTemp[i]/(pow((tempTime*tempTime) / 4 + 1, 2)) - 1;
+        //yErr[i]= yTemp[i]/(pow(((t + h)*(t + h)) / 4 + 1, 2)) - 1;
+        yErr[i] = 0.0;
         __syncthreads();
-        //printf("I calculated the error to be:\n %f(yErr[%d]) = %f(yTemp[%d]) / (pow(%d * %d (tempTime) / 4 + 1, 2)) - 1\n", yErr[i], i, yTemp[i], i, tempTime, tempTime);
-        
+        printf("I calculated the error to be:\n %f(yErr[%d]) = %f(yTemp[%d]) / (pow(%d * %d (tempTime) / 4 + 1, 2)) - 1\n", yErr[i], i, yTemp[i], i, t + h, t + h);
+        __syncthreads();
     }
 }
 
@@ -97,6 +98,7 @@ __device__ void
 	
  	// initial step size
  	double h = 0.5 * fabs ( tEnd - t);
+    h = .05;
  	// integrate until specified end time
         while (t < tEnd ) {
                 // for implicit solver, there would be a step size estimate here
@@ -104,17 +106,17 @@ __device__ void
                 // you don't reject steps as often. 
 		
  		// limit step size based on remaining time
- 		h = fmin ( tEnd - t, h);
+ 		//h = fmin ( tEnd - t, h);
         __syncthreads();
-        if(h == 0){
-            h = .05;
-        }
+        
+        //h = .05;
+        
         //printf("The min function determined that h is now %f\n", h);
-        __syncthreads();
-        printf("h is %f inside loop\n", h);
+        // __syncthreads();
+        // printf("h is %f inside loop\n", h);
         
         //printf("tend (%f) - t(%f) = %f, h is now %f\n", tEnd, t, tEnd-t, h);
-        __syncthreads();
+        // __syncthreads();
 		
  		// y and error vectors temporary until error determined
  		double yTemp [ 2 ], yErr [ 2 ];
@@ -209,10 +211,14 @@ __device__ void
                         // shared memory was used correctly
  			err = fmax (err , fabs ( yErr [i] / ( fabs (y[i]) + fabs (h * F[i]) + TINY )));
  		}
- 		err /= eps ;
+        printf("Error is calculated to be %f\n", err);
+
+        //This might be needed, but I am killing it for now
+ 		//err /= eps ;
 		
  		// check if error too large
  		if (( err > 1.0) || isnan (err ) || ( nanFlag == 1)) {
+            printf("Error is too large / wrong\n");
  		// step failed , error too large
  			if ( isnan (err ) || ( nanFlag == 1)) {
  				h *= P1;
@@ -220,9 +226,11 @@ __device__ void
  			else {
  				h = fmax ( SAFETY * h * pow(err , PSHRNK ), P1 * h);
  			}
+            printf("h is now %f\n", h);
  		} 
  		else {
  			// step accepted
+            printf("Step accepted, t = %f will now be %f\n", t, t + h);
  			t += h;
  			if ( err > ERRCON ) {
  				h = SAFETY * h * pow(err , PGROW );
