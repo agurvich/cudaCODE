@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     g[0] = 1;
     g[1] = 2;
 
-    double tEnd = 1;//seconds
+    double tEnd = .1;//seconds
 
     double t0 = 0;
     double h = 0.1;// seconds
