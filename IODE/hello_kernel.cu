@@ -80,12 +80,20 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         __syncthreads();
         yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)/6;
         double timeTemp = h + t;
+        
+        //testing for error
+        double y2 = ((timeTemp * timeTemp) / 4) + 1.0;
+        y2 = y2 * y2;
+        //printf("y[i](%f)/y2(%f) - 1 = %f\n", y[i], y2, y[i]/y2 - 1);
+
+
+
         ////printf("About to calculate error using h = %f and t = %f\n meaning my timeTemp should be %f, but it is %f", h, t, h + t, timeTemp);
         
         //taking absolute difference between rk4 and riemann to determine eror
         yErr[i] = fabs(yTemp[i] - (y[i] + F[i]*h));
         //yErr[i]= yTemp[i]/(pow(((timeTemp)*(timeTemp)) / 4 + 1, 2)) - 1;
-        //yErr[i] = 0.0;
+        //yErr[i] = (y[i]/y2) - 1;
         __syncthreads();
         //printf("yErr[%d] = %f (abs(yTemp[%d](%f) - (y[%d](%f) + F[%d](%f)*h(%f)))\n", i, yErr[i], i, yTemp[i], i, y[i], i, F[i],h);
         ////printf("I calculated the error to be:\n %f(yErr[%d]) = %f(yTemp[%d]) / (pow(%d * %d (tempTime) / 4 + 1, 2)) - 1\n", yErr[i], i, yTemp[i], i, timeTemp, timeTemp);
@@ -217,6 +225,7 @@ __device__ void
             //Brian changed this
             //err = fmax(err, yErr[i]);
             ////printf("yErr = %f, y = %f, h = %f, f = %f\n", yErr[i], y[i], h, F[i] );
+            //err = fmax(err, fabs(yErr[i]));
             err = fmax (err , fabs(yErr[i] / fabs (yTemp[i])));
             //printf("err = %f / (%f + (%f*%f)) + %f\n fabs(h*F[i])=%.16f\n", yErr[i], y[i], h, F[i], TINY, h*F[i]);
             //printf("Error is currently %f on the %d th iteration\n", err, i);
