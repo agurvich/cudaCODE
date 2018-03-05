@@ -28,7 +28,7 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
     // F[1] = g[1];
 
     F[0] = g[0];
-    F[1] = (y[0] + g[1]*t)*y[1];
+    F[1] = -cosf((float) t);//(y[0] + g[1]*t)*y[1];
 }
 
  __device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN){
@@ -77,7 +77,6 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         double y2 = ((timeTemp * timeTemp) / 4) + 1.0;
         y2 = y2 * y2;
         //printf("y[i](%f)/y2(%f) - 1 = %f\n", y[i], y2, y[i]/y2 - 1);
-
 
 
         ////printf("About to calculate error using h = %f and t = %f\n meaning my timeTemp should be %f, but it is %f", h, t, h + t, timeTemp);
@@ -140,12 +139,10 @@ __device__ void
         */
 
         // take a trial step
-        //riemannStep (y, F, h, yTemp , yErr, NEQN);
-
-        ////printf("Jumping into rk4Step\n");
+        riemannStep (y, F, h, yTemp , yErr, NEQN);
 
         //RK4 is not working when I just call it so I am improvising
-        rk4Step(t, y, F, h, g, yTemp , yErr, NEQN);
+        //rk4Step(t, y, F, h, g, yTemp , yErr, NEQN);
 
         // calculate error
         double err = 0.0;
@@ -171,7 +168,7 @@ __device__ void
         //err /= eps ;
         
         // check if error too large
-        if (( err > 0.01) || isnan (err ) || ( nanFlag == 1)) {
+        if (( err > 0.1) || isnan (err ) || ( nanFlag == 1)) {
             //printf("Error is too large / wrong\n");
         // step failed , error too large
             if ( isnan (err ) || ( nanFlag == 1)) {

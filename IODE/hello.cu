@@ -19,17 +19,48 @@ double * allocateDeviceAndCopy(double * hostPointer,int memsize){
     return devicePointer;
 }
 
+void generateSampleInput(int, int);
 //extern "C"
 
+#define INPUT_FMAX 2
+#define INPUT_GMAX 10
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
+void generateSampleInput(int numODE,int NEQN){
+    FILE* stream = fopen("sample_input.txt", "w");
+    fprintf(stream,"%d\n",NEQN);
+    double value;
+    for (int i=0; i<numODE; i++){
+        for (int j=0; j<NEQN;j++){
+            if (j < NEQN/2){
+                // between 0 and 1
+                value = (float) rand()/(float)(RAND_MAX);
+                value*=INPUT_FMAX;
+            }
+            else{ 
+                // between 0 and 1
+                value = (float) rand()/(float)(RAND_MAX);
+                // between -0.5 and 0.5
+                value-=0.5;
+                value*=INPUT_GMAX;
+            }
+            // print this equation's initial condition to file
+            fprintf(stream,"%f;",value);
+        }
+        // start a new element
+        fprintf(stream,"\n");
+    }
+    return;
+}
+
 int main(int argc, char** argv) {
     // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 1;
+    int numODE = 10;
 
     // number of equations, e.g. 157
-    int NEQN = 2;
+    int NEQN = 4;
+    generateSampleInput(numODE,NEQN);
 
     // the actual equations
     //double ** y;
@@ -42,15 +73,15 @@ int main(int argc, char** argv) {
     double y[2];
     double g[2];
     y[0] = 0;
-    y[1] = 1; // cycles per second, matches spring constant
+    y[1] = 0; // cycles per second, matches spring constant
 
     g[0] = 1;
     g[1] = 2;
 
-    double tEnd = 1;//seconds
+    double tEnd = 14;//seconds
 
     double t0 = 0;
-    double h = 0.1;// seconds
+    double h = 0.75;// seconds
 
     // Format host matrix into 1-d array
     double * yHost ;
