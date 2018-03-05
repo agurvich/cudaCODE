@@ -11,11 +11,12 @@
 # define STEP_INCREASE 1.0
 # define P1 0.9
 
+
+#define EQUIL_LENGTH  2
+#define SPRING_CONSTANT  .04 // 1/25 -> w = 0.2 cycles per second
+#define MASS  1
+
 const float eps = 1.0e-10;
-
-
-#define EQUIL_LENGTH 2
-#define SPRING_CONSTANT .04 // 1/25 -> w = 0.2 cycles per second
 
 __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
     ////printf("I have entered dydt\n");
@@ -27,12 +28,8 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
     // F[1] = g[1];
 
     F[0] = g[0];
-    F[1] = (y[0]+g[1]*t)*y[1];
+    F[1] = (y[0] + g[1]*t)*y[1];
 }
-
- 
-
-
 
  __device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN){
     for (int i=0; i < NEQN; i++){
@@ -52,12 +49,10 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         
         double k0 = h * F[i];
         ////printf("Calculated k0 to be %f = %f (h) * %f (F[%d])\n", k0, h, F[i], i);
-        __syncthreads();
         tempY[0] = y[0] + k0 / 2;
         tempY[1] = y[1] + k0 / 2;
         //f(t+ (h/2), y[i] + k0 / 2
         dydt(t+h/2,tempY, g, tempF, NEQN);
-        __syncthreads();
         double k1 = h * tempF[i];
         
 
@@ -65,7 +60,6 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         tempY[1] = y[1] + k1 / 2;
         //f(t + (h/2), y[i] + k1 / 2)
         dydt(t+h/2,tempY, g, tempF, NEQN);
-        __syncthreads();
         double k2 = h * tempF[i];
         
 
@@ -73,11 +67,9 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         tempY[1] = y[1] + k2;
         //f(t + h, y[i] + k2
         dydt(t+h, tempY, g, tempF, NEQN);
-        __syncthreads();
         double k3 = h * tempF[i];
         
         ////printf("I have calculated my k values to be %f, %f, %f, %f\n", k0,k1,k2,k3);
-        __syncthreads();
         yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)/6;
         double timeTemp = h + t;
         
@@ -94,10 +86,8 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         yErr[i] = fabs(yTemp[i] - (y[i] + F[i]*h));
         //yErr[i]= yTemp[i]/(pow(((timeTemp)*(timeTemp)) / 4 + 1, 2)) - 1;
         //yErr[i] = (y[i]/y2) - 1;
-        __syncthreads();
         //printf("yErr[%d] = %f (abs(yTemp[%d](%f) - (y[%d](%f) + F[%d](%f)*h(%f)))\n", i, yErr[i], i, yTemp[i], i, y[i], i, F[i],h);
         ////printf("I calculated the error to be:\n %f(yErr[%d]) = %f(yTemp[%d]) / (pow(%d * %d (tempTime) / 4 + 1, 2)) - 1\n", yErr[i], i, yTemp[i], i, timeTemp, timeTemp);
-        __syncthreads();
     }
 }
 
@@ -111,7 +101,6 @@ __device__ void
     
     // initial step size
     double h = 0.5 * fabs ( tEnd - t);
-    h = .05;
     // integrate until specified end time
         while (t < tEnd ) {
                 // for implicit solver, there would be a step size estimate here
@@ -119,17 +108,13 @@ __device__ void
                 // you don't reject steps as often. 
         
         // limit step size based on remaining time
-        //h = fmin ( tEnd - t, h);
+        h = fmin ( tEnd - t, h);
         
-        
-        //h = .05;
         
         ////printf("The min function determined that h is now %f\n", h);
-        // __syncthreads();
         // //printf("h is %f inside loop\n", h);
         
         ////printf("tend (%f) - t(%f) = %f, h is now %f\n", tEnd, t, tEnd-t, h);
-        // __syncthreads();
         
         // y and error vectors temporary until error determined
         double yTemp [ 2 ], yErr [ 2 ];
@@ -137,83 +122,32 @@ __device__ void
         // evaluate derivative
         double F[ 2 ];
 
-                // function that takes the state and finds the derivative at the current time
-                // for coupling just look within y!!! don't need to couple elements *yet*
-
-
+        // function that takes the state and finds the derivative at the current time
+        // for coupling just look within y!!! don't need to couple elements *yet*
         dydt (t, y, g, F, NEQN);
-///////////////////////////////// here is where you define your equations, one for each of NEQN
-                //F[0] = 1;
-                //F[1] = (y[0]+g[1]*t)*y[1];
-///////////////////////////////// 
 
-                /*
-                if (threadIdx.x == 0) //printf("t %.2f\t",t);
-                if (threadIdx.x == 0) //printf("y[0] %.2f\t",y[0]);
-                if (threadIdx.x == 0) //printf("F[0] %.2f (%.2f)\t",F[0],1.0);
-                if (threadIdx.x == 0) //printf("g[0] %.2f\n",g[0]);
+        /*
+        if (threadIdx.x == 0) //printf("t %.2f\t",t);
+        if (threadIdx.x == 0) //printf("y[0] %.2f\t",y[0]);
+        if (threadIdx.x == 0) //printf("F[0] %.2f (%.2f)\t",F[0],1.0);
+        if (threadIdx.x == 0) //printf("g[0] %.2f\n",g[0]);
 
 
-                if (threadIdx.x == 0) //printf("t %.2f\t",t);
-                if (threadIdx.x == 0) //printf("y[1] %.2f\t",y[1]);
-                if (threadIdx.x == 0) //printf("F[1] %.2f (%.2f)\t",F[1],y[0]+2*t-y[1]);
-                if (threadIdx.x == 0) //printf("g[1] %.2f\n",g[1]);
-                */
+        if (threadIdx.x == 0) //printf("t %.2f\t",t);
+        if (threadIdx.x == 0) //printf("y[1] %.2f\t",y[1]);
+        if (threadIdx.x == 0) //printf("F[1] %.2f (%.2f)\t",F[1],y[0]+2*t-y[1]);
+        if (threadIdx.x == 0) //printf("g[1] %.2f\n",g[1]);
+        */
 
         // take a trial step
         //riemannStep (y, F, h, yTemp , yErr, NEQN);
+
         ////printf("Jumping into rk4Step\n");
 
-
         //RK4 is not working when I just call it so I am improvising
-        __syncthreads();
         rk4Step(t, y, F, h, g, yTemp , yErr, NEQN);
-        __syncthreads();
-        // //printf("Declaring variables for rk4\n");
-        // double tempF[2];
-        // double tempY[2];
-        // //printf("Temptime delcare\n");
-        // double tempTime = t + h;
-        // //printf("Beginning rk4 step for time %f\n", t);
-        // for (int i=0; i < NEQN; i++){
-            
-        //     double k0 = h * F[i];
-    
-        //     tempY[0] = y[0] + k0 / 2;
-        //     tempY[1] = y[1] + k0 / 2;
-        //     //f(t+ (h/2), y[i] + k0 / 2
-        //     dydt(t+h/2,tempY, g, tempF, NEQN);
-        //     double k1 = h * tempF[i];
-            
-    
-        //     tempY[0] = y[0] + k1 / 2;
-        //     tempY[1] = y[1] + k1 / 2;
-        //     //f(t + (h/2), y[i] + k1 / 2)
-        //     dydt(t+h/2,tempY, g, tempF, NEQN);
-        //     double k2 = h * tempF[i];
-            
-    
-        //     tempY[0] = y[0] + k2;
-        //     tempY[1] = y[1] + k2;
-        //     //f(t + h, y[i] + k2
-        //     dydt(t+h, tempY, g, tempF, NEQN);
-        //     double k3 = h * tempF[i];
-            
-        //     yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)/6;
-    
-        //     yErr[i]= yTemp[i]/(pow(tempTime*tempTime / 4 + 1, 2)) - 1;
-            
-        // }
 
-
-
-
-        //rkckStep (t, y, g, F, h, yTemp , yErr );
-        ////printf("Returned from rk4Step\n");
-   //      for(int i = 0; i<NEQN; i++){
-   //          //printf("y[%d]: %f     yTemp[%d]: %f     Error is %f\n", i, y[i], i, yTemp[i], yErr[i]);      
-        // }
-                // calculate error
+        // calculate error
         double err = 0.0;
         int nanFlag = 0;
         for (int i = 0; i < NEQN ; ++i) {

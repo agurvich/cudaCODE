@@ -2,9 +2,9 @@
 #include <math.h>
 #include "hello.h"
 
-#define EQUIL_LENGTH = 2
-#define SPRING_CONSTANT = .04 // 1/25 -> w = 0.2 cycles per second
-#define MASS = 1
+#define EQUIL_LENGTH  2
+#define SPRING_CONSTANT  .04 // 1/25 -> w = 0.2 cycles per second
+#define MASS  1
 
 __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
     // r equation
