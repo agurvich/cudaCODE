@@ -4,80 +4,75 @@
 
 /*The format of the elements should be as follows: 
 
-NEQN | Y values | G Value 
+Y values | G Value  \n
+.....				\n
+\n
 
 */
 
 
 void newElement(char* line, double * y, double * g, int* NEQN, int whichEle){
-	const char* tok;
-	int loc = 0;
-	for (tok = strtok(line, ";"); tok && *tok; tok = strtok(NULL, ";\n")){
+    char* tok;
+    unsigned loc = 0;
+    unsigned loc2 = 0;
+	printf("Handling line %d\n", whichEle);
+	for (tok = strtok(line, " N"); tok && *tok; tok = strtok(NULL, "N \n")){
+		
 		if(loc < (*NEQN)){
+			printf("Dealing with %s and placing it in index %d * %d + %d = %d in Y\n", tok, whichEle, *NEQN, loc, (whichEle * (*NEQN)) + loc);
 			y[(whichEle * (*NEQN)) + loc] = atof(tok);
+			loc++;
 		}
 		else{
-			g[(whichEle * (*NEQN)) + loc] = atof(tok);
+			printf("Dealing with %s and placing it in index %d * %d + %d = %d in G\n", tok, whichEle, *NEQN, loc2, (whichEle * (*NEQN)) + loc2);
+			g[(whichEle * (*NEQN)) + loc2] = atof(tok);
+			loc2++;
 		}
-		loc++;
 	}
-}
-
-//The first line of the input file will state how many equations/element and number of elements there are
-void parameterSetup(char* line, double * y, double * g, int* NEQN, int* numODE){
-	const char* tok;
-	int loc = 0;
-
-	//Creates a 2D array of doubles
-	double yTemp[(*numODE) * (*NEQN)];
-	double gTemp[(*numODE) * (*NEQN)];
-	
-
-	//set given y to yTemp
-	y = yTemp;
-
-	//set g array
-	g = gTemp;
-
-	//done
-	return;
-
 }
 
 
 void parseInputs(char* inputFile, double * y, double * g, int* NEQN, int* numODE){
-	FILE* stream = fopen(inputFile, "r");
 	FILE* oStream = fopen(inputFile, "r");
 	char line[1024];
 	int firstLine = 1;
 	int whichEle = 0;
-	uint32_t count = 0;
+	unsigned count = 0;
+	char firstLineDone = 0;
 	char c;
+	*numODE = 0;
+	printf("Opening file %s, numODE = %d, NEQN = %d \n", inputFile, *numODE, *NEQN);
 	for (c = getc(oStream); c != EOF; c = getc(oStream)){
         if (c == '\n'){ // Increment count if this character is newline
-            *numODE++;
+        	//printf("Found a new line!\n");
+            *numODE = *numODE + 1;
+            firstLineDone = 1;
+        }
+        if (c == 'N' && !firstLineDone){
+        	count++;
         }
     }
-    for (c = getc(oStream); c != '\n'; c = getc(oStream)){
-        if (c == ';'){ // Increment count if this character is newline
-            count++;
-        }
-    }
-    *NEQN = count >> 1;
-
+    fclose(oStream);
+    FILE* nStream = fopen(inputFile, "r");
+    printf("%d Number of Elements\n", *numODE);
+    (*NEQN) = count/2;
+    printf("There are %d equations per element, count = %d\n", *NEQN, count);
+    printf("Setting up my y and g arrays\n");
+	y = (double *)malloc(sizeof(double) * (*NEQN) * (*numODE));
+	g = (double *)malloc(sizeof(double) * (*NEQN) * (*numODE));
+    FILE* stream = fopen(inputFile, "r");
 	//This will seqentially go through each line of the input file and then create a new element per-line.
 	while(fgets(line, 1024, stream)){
 		char* tmp = strdup(line);
-		if(firstLine){
-			parameterSetup(tmp, y, g, NEQN, numODE);
-			firstLine = 0;
-		}
 		
 			//actually create the element
-			newElement(tmp, y, g, *NEQN, whichEle);
+			printf("Making new element\n");
+			newElement(tmp, y, g, NEQN, whichEle);
 			//Increment which element to work on
 			whichEle++;
 		
 	}
+
+	fclose(stream);
 	return;
 }

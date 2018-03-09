@@ -9,7 +9,7 @@
 
 // includes, kernels
 #include "hello.h"
-
+#include "input.c"
 ////////////////////////////////////////////////////////////////////////////////
 // declarations, forward
 double * allocateDeviceAndCopy(double * hostPointer,int memsize){
@@ -32,7 +32,7 @@ void generateSampleInput(int numODE,int NEQN){
     //fprintf(stream,"%d\n",NEQN);
     double value;
     for (int i=0; i<numODE; i++){
-        for (int j=0; j<NEQN;j++){
+        for (int j=0; j<2*NEQN;j++){
             if (j < NEQN/2){
                 // between 0 and 1
                 value = (float) rand()/(float)(RAND_MAX);
@@ -46,11 +46,12 @@ void generateSampleInput(int numODE,int NEQN){
                 value*=INPUT_GMAX;
             }
             // print this equation's initial condition to file
-            fprintf(stream,"%f;",value);
+            fprintf(stream,"%f N ",value);
         }
         // start a new element
         fprintf(stream,"\n");
     }
+    fclose(stream);
     return;
 }
 
@@ -61,14 +62,25 @@ int main(int argc, char** argv) {
     // number of equations, e.g. 157
     int NEQN = 2;
     generateSampleInput(numODE,NEQN);
+    printf("Generated Input\n");
 
-    // the actual equations
+    // the actual equations' initial conditions
     double * y;
     double * g;
 
     //This will initiallize stuff by reading the input file.
     parseInputs(argv[1], y, g, &NEQN, &numODE);
-
+    printf("Parsed Inputs\n");
+    printf("numODE = %d, NEQN = %d\n", numODE, NEQN);
+    printf("Printing my y and g arrays\n Y: ");
+    for(int k = 0; k < NEQN * numODE; k++){
+        printf("%f ", y[k]);
+    }
+    printf("\nG: ");
+    for(int k = 0; k < NEQN * numODE; k++){
+        printf("%f ", g[k]);
+    }
+    printf("\n\n");
 
     // double y[2];
     // double g[2];
@@ -83,14 +95,14 @@ int main(int argc, char** argv) {
     double t0 = 0;
     double h = 0.75;// seconds
 
-    // Format host matrix into 1-d array
-    double * yHost ;
-    yHost = ( double *) malloc ( numODE * NEQN * sizeof ( double ));
+    // // Format host matrix into 1-d array
+    // double * yHost ;
+    // yHost = ( double *) malloc ( numODE * NEQN * sizeof ( double ));
     //yHost[0] = y[0];
     //yHost[1] = y[1];
 
-    double * gHost;
-    gHost = (double *) malloc ( NEQN * sizeof(double));
+    // double * gHost;
+    // gHost = (double *) malloc ( NEQN * sizeof(double));
     //gHost[0] = g[0];
     //gHost[1] = g[1];
 
@@ -108,7 +120,7 @@ int main(int argc, char** argv) {
     yDevice = allocateDeviceAndCopy(y,numODE * NEQN * sizeof ( double ));
     double * gDevice ;
     gDevice = allocateDeviceAndCopy(g,NEQN * sizeof ( double ));
-
+    printf("Copied over my y and g to CUDA\n");
     // setup grid dimensions
     int blockSize ;
     if ( numODE < 4194304) {
@@ -137,21 +149,21 @@ int main(int argc, char** argv) {
     while (t < tEnd ) {
         // transfer memory to GPU
         if (t!=t0){
-            cudaMemcpy ( yDevice , yHost , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
-            cudaMemcpy ( gDevice , gHost , NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
+            cudaMemcpy ( yDevice , y , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
+            cudaMemcpy ( gDevice , g , NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
         }
-        
+
         intDriver <<<numODE , 1 >>> (t, tNext , numODE , NEQN, gDevice , yDevice );
         
          // transfer memory back to CPU
-        cudaMemcpy (yHost , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
-        cudaMemcpy (gHost , gDevice , NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
+        cudaMemcpy (y , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
+        cudaMemcpy (g , gDevice , NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
 
         // for each system
         for (int j=0; j<numODE; j++){
             printf("%.4f ",t);
             for (int i=0; i<NEQN;i++){
-                printf("%.4f ",yHost[i+2*j]);
+                printf("%.4f ",y[i+2*j]);
         }
         printf("\n");
     }

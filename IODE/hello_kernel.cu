@@ -123,7 +123,7 @@ __device__ void
 
         // function that takes the state and finds the derivative at the current time
         // for coupling just look within y!!! don't need to couple elements *yet*
-        dydt (t, y, g, F, NEQN);
+        dydt (t, (y + (threadIdx.x * NEQN)), (g + (threadIdx.x * NEQN)), F, NEQN);
 
         /*
         if (threadIdx.x == 0) //printf("t %.2f\t",t);
@@ -139,15 +139,15 @@ __device__ void
         */
 
         // take a trial step
-        riemannStep (y, F, h, yTemp , yErr, NEQN);
+        riemannStep ((y + (threadIdx.x * NEQN)), F, h, yTemp , yErr, NEQN);
 
         //RK4 is not working when I just call it so I am improvising
-        //rk4Step(t, y, F, h, g, yTemp , yErr, NEQN);
+        //rk4Step(t, (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
 
         // calculate error
         double err = 0.0;
         int nanFlag = 0;
-        for (int i = 0; i < NEQN ; ++i) {
+        for (int i = NEQN * threadIdx.x; i < (NEQN + NEQN) ; ++i) {
             if ( isnan ( yErr [i])) nanFlag = 1;
                         // when we take the max, we necessarily limit each set of equations to proceed
                         // at the rate of the *slowest* equation. If we relax this constraint (and maybe 
@@ -196,10 +196,11 @@ __device__ void
             }
             // ensure step size is bounded
             h = fmax (hMin , fmin (hMax , h));
-            for (int i = 0; i < NEQN ; ++i)
+            for (int i = (NEQN * threadIdx.x); i < (NEQN + NEQN) ; ++i)
                 y[i] = yTemp [i];
         }
     }
+    __syncthreads();
  }
 
 __global__ void
@@ -223,26 +224,28 @@ intDriver ( const double t, const double tEnd , const int numODE ,
                 // coupling matrix, pass stuff around as necessary
                 // TODO
 
-        // local array with initial values
-        double yLocal [ 2 ];
+        //I may adjust this later
 
-        // constant parameter (s)
-                // (ABG): doesn't need to be coalesced b.c. just 1 number 
-        double gLocal[2]; 
-                gLocal[0] = gGlobal[0];// [tid ];
-                gLocal[1] = gGlobal[1];// [tid ];
+        // // local array with initial values
+        // double yLocal [ 2 ];
 
-        // load local array with initial values from global array
-        for (int i = 0; i < NEQN ; ++i) {
-            yLocal [i] = yGlobal [tid + numODE * i];
-        }
+        // // constant parameter (s)
+        //         // (ABG): doesn't need to be coalesced b.c. just 1 number 
+        // double gLocal[2]; 
+        //         gLocal[0] = gGlobal[0];// [tid ];
+        //         gLocal[1] = gGlobal[1];// [tid ];
+
+        // // load local array with initial values from global array
+        // for (int i = 0; i < NEQN ; ++i) {
+        //     yLocal [i] = yGlobal [tid + numODE * i];
+        // }
 
         // call integrator for one time step
-        rkckDriver(t, tEnd , gLocal, yLocal, NEQN);
+        rkckDriver(t, tEnd , gGlobal, yGlobal, NEQN);
         // update global array with integrated values
-        for (int i = 0; i < NEQN ; ++i) {
-            yGlobal [tid + numODE * i] = yLocal [i];
-        }
+        // for (int i = 0; i < NEQN ; ++i) {
+        //     yGlobal [tid + numODE * i] = yLocal [i];
+        // }
      }
 }
 
