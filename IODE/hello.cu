@@ -29,7 +29,7 @@ void generateSampleInput(int, int);
 ////////////////////////////////////////////////////////////////////////////////
 void generateSampleInput(int numODE,int NEQN){
     FILE* stream = fopen("sample_input.txt", "w");
-    fprintf(stream,"%d\n",NEQN);
+    //fprintf(stream,"%d\n",NEQN);
     double value;
     for (int i=0; i<numODE; i++){
         for (int j=0; j<NEQN;j++){
@@ -59,24 +59,24 @@ int main(int argc, char** argv) {
     int numODE = 10;
 
     // number of equations, e.g. 157
-    int NEQN = 4;
+    int NEQN = 2;
     generateSampleInput(numODE,NEQN);
 
     // the actual equations
-    //double ** y;
-    //double * g;
+    double * y;
+    double * g;
 
     //This will initiallize stuff by reading the input file.
-    //parseInputs(argv[1], y, g, &NEQN, &numODE);
+    parseInputs(argv[1], y, g, &NEQN, &numODE);
 
 
-    double y[2];
-    double g[2];
-    y[0] = 0;
-    y[1] = 0; // cycles per second, matches spring constant
+    // double y[2];
+    // double g[2];
+    // y[0] = 0;
+    // y[1] = 0; // cycles per second, matches spring constant
 
-    g[0] = 1;
-    g[1] = 2;
+    // g[0] = 1;
+    // g[1] = 2;
 
     double tEnd = 14;//seconds
 
@@ -86,13 +86,13 @@ int main(int argc, char** argv) {
     // Format host matrix into 1-d array
     double * yHost ;
     yHost = ( double *) malloc ( numODE * NEQN * sizeof ( double ));
-    yHost[0] = y[0];
-    yHost[1] = y[1];
+    //yHost[0] = y[0];
+    //yHost[1] = y[1];
 
     double * gHost;
     gHost = (double *) malloc ( NEQN * sizeof(double));
-    gHost[0] = g[0];
-    gHost[1] = g[1];
+    //gHost[0] = g[0];
+    //gHost[1] = g[1];
 
     /*
 
@@ -105,9 +105,9 @@ int main(int argc, char** argv) {
 
     // allocate memory on the device and copy over
     double * yDevice ;
-    yDevice = allocateDeviceAndCopy(yHost,numODE * NEQN * sizeof ( double ));
+    yDevice = allocateDeviceAndCopy(y,numODE * NEQN * sizeof ( double ));
     double * gDevice ;
-    gDevice = allocateDeviceAndCopy(gHost,NEQN * sizeof ( double ));
+    gDevice = allocateDeviceAndCopy(g,NEQN * sizeof ( double ));
 
     // setup grid dimensions
     int blockSize ;
@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
             cudaMemcpy ( gDevice , gHost , NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
         }
         
-        intDriver <<<dimGrid , dimBlock >>> (t, tNext , numODE , NEQN, gDevice , yDevice );
+        intDriver <<<numODE , 1 >>> (t, tNext , numODE , NEQN, gDevice , yDevice );
         
          // transfer memory back to CPU
         cudaMemcpy (yHost , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
