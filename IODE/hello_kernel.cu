@@ -93,11 +93,13 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
 __device__ void
  rkckDriver ( double t, const double tEnd , double * g,
  double * y, int NEQN) {
+    int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
+    //printf("I am thread %d and will be working on indeces %d and %d\n", tid, tid * NEQN, tid * NEQN + 1);
 
     // maximum and minimum allowable step sizes
     const double hMax = fabs ( tEnd - t);
     const double hMin = 1.0e-20;
-    
+
     // initial step size
     double h = 0.5 * fabs ( tEnd - t);
     // integrate until specified end time
@@ -123,7 +125,7 @@ __device__ void
 
         // function that takes the state and finds the derivative at the current time
         // for coupling just look within y!!! don't need to couple elements *yet*
-        dydt (t, (y + (threadIdx.x * NEQN)), (g + (threadIdx.x * NEQN)), F, NEQN);
+        dydt (t, (y + (tid * NEQN)), (g + (tid * NEQN)), F, NEQN);
 
         /*
         if (threadIdx.x == 0) //printf("t %.2f\t",t);
@@ -139,7 +141,7 @@ __device__ void
         */
 
         // take a trial step
-        riemannStep ((y + (threadIdx.x * NEQN)), F, h, yTemp , yErr, NEQN);
+        riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
 
         //RK4 is not working when I just call it so I am improvising
         //rk4Step(t, (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
@@ -147,7 +149,7 @@ __device__ void
         // calculate error
         double err = 0.0;
         int nanFlag = 0;
-        for (int i = NEQN * threadIdx.x; i < (NEQN + NEQN) ; ++i) {
+        for (int i = 0; i < (NEQN) ; ++i) {
             if ( isnan ( yErr [i])) nanFlag = 1;
                         // when we take the max, we necessarily limit each set of equations to proceed
                         // at the rate of the *slowest* equation. If we relax this constraint (and maybe 
@@ -196,8 +198,8 @@ __device__ void
             }
             // ensure step size is bounded
             h = fmax (hMin , fmin (hMax , h));
-            for (int i = (NEQN * threadIdx.x); i < (NEQN + NEQN) ; ++i)
-                y[i] = yTemp [i];
+            for (int i = (NEQN * tid); i < (NEQN*tid + NEQN) ; ++i)
+                y[i] = yTemp [i - NEQN*tid];
         }
     }
     __syncthreads();
@@ -217,6 +219,7 @@ intDriver ( const double t, const double tEnd , const int numODE ,
     // ensure thread within limit
         // (ABG): Each thread is given a system to work on
     if (tid < numODE ) {
+
                 
                 // for coupling elements, let's just do granular time steps here
                 // and assume systems are constant within the integrator, will 

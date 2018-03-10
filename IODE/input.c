@@ -15,33 +15,30 @@ void newElement(char* line, double * y, double * g, int* NEQN, int whichEle){
     char* tok;
     unsigned loc = 0;
     unsigned loc2 = 0;
-	printf("Handling line %d\n", whichEle);
+	//printf("Handling line %d\n", whichEle);
 	for (tok = strtok(line, " N"); tok && *tok; tok = strtok(NULL, "N \n")){
 		
 		if(loc < (*NEQN)){
-			printf("Dealing with %s and placing it in index %d * %d + %d = %d in Y\n", tok, whichEle, *NEQN, loc, (whichEle * (*NEQN)) + loc);
+			//printf("Dealing with %s and placing it in index %d * %d + %d = %d in Y\n", tok, whichEle, *NEQN, loc, (whichEle * (*NEQN)) + loc);
 			y[(whichEle * (*NEQN)) + loc] = atof(tok);
 			loc++;
 		}
 		else{
-			printf("Dealing with %s and placing it in index %d * %d + %d = %d in G\n", tok, whichEle, *NEQN, loc2, (whichEle * (*NEQN)) + loc2);
+			//printf("Dealing with %s and placing it in index %d * %d + %d = %d in G\n", tok, whichEle, *NEQN, loc2, (whichEle * (*NEQN)) + loc2);
 			g[(whichEle * (*NEQN)) + loc2] = atof(tok);
 			loc2++;
 		}
 	}
 }
 
-
-void parseInputs(char* inputFile, double * y, double * g, int* NEQN, int* numODE){
+void getStats(char* inputFile,int* NEQN, int* numODE){
 	FILE* oStream = fopen(inputFile, "r");
-	char line[1024];
-	int firstLine = 1;
-	int whichEle = 0;
-	unsigned count = 0;
+	*NEQN = 0;
+	*numODE = 0;
 	char firstLineDone = 0;
 	char c;
-	*numODE = 0;
-	printf("Opening file %s, numODE = %d, NEQN = %d \n", inputFile, *numODE, *NEQN);
+	unsigned count = 0;
+	//printf("Opening file %s, numODE = %d, NEQN = %d \n", inputFile, *numODE, *NEQN);
 	for (c = getc(oStream); c != EOF; c = getc(oStream)){
         if (c == '\n'){ // Increment count if this character is newline
         	//printf("Found a new line!\n");
@@ -53,20 +50,24 @@ void parseInputs(char* inputFile, double * y, double * g, int* NEQN, int* numODE
         }
     }
     fclose(oStream);
-    FILE* nStream = fopen(inputFile, "r");
-    printf("%d Number of Elements\n", *numODE);
+    //printf("%d Number of Elements\n", *numODE);
     (*NEQN) = count/2;
-    printf("There are %d equations per element, count = %d\n", *NEQN, count);
-    printf("Setting up my y and g arrays\n");
-	y = (double *)malloc(sizeof(double) * (*NEQN) * (*numODE));
-	g = (double *)malloc(sizeof(double) * (*NEQN) * (*numODE));
+    //printf("There are %d equations per element, count = %d\n", *NEQN, count);
+}
+
+void parseInputs(char* inputFile, double * y, double * g, int* NEQN, int* numODE){
+	
+	char line[1024];
+	int firstLine = 1;
+	int whichEle = 0;
+
     FILE* stream = fopen(inputFile, "r");
 	//This will seqentially go through each line of the input file and then create a new element per-line.
 	while(fgets(line, 1024, stream)){
 		char* tmp = strdup(line);
 		
 			//actually create the element
-			printf("Making new element\n");
+			//printf("Making new element\n");
 			newElement(tmp, y, g, NEQN, whichEle);
 			//Increment which element to work on
 			whichEle++;

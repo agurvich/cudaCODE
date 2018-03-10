@@ -69,18 +69,27 @@ int main(int argc, char** argv) {
     double * g;
 
     //This will initiallize stuff by reading the input file.
+    //This will set NEQN and numODE to be correct
+    getStats(argv[1], &NEQN, &numODE);
+
+    //printf("Setting up my y and g arrays based on a NEQN of %d and a numODE of %d\n", NEQN, numODE);
+    y = (double *)malloc(sizeof(double) * (NEQN) * (numODE));
+    g = (double *)malloc(sizeof(double) * (NEQN) * (numODE));
+
+
     parseInputs(argv[1], y, g, &NEQN, &numODE);
-    printf("Parsed Inputs\n");
-    printf("numODE = %d, NEQN = %d\n", numODE, NEQN);
-    printf("Printing my y and g arrays\n Y: ");
-    for(int k = 0; k < NEQN * numODE; k++){
-        printf("%f ", y[k]);
-    }
-    printf("\nG: ");
-    for(int k = 0; k < NEQN * numODE; k++){
-        printf("%f ", g[k]);
-    }
-    printf("\n\n");
+    printf("Finished filling y and g matrices with their numbers\n");
+    // printf("Parsed Inputs\n");
+    // printf("numODE = %d, NEQN = %d\n", numODE, NEQN);
+    // printf("Printing my y and g arrays\n Y: ");
+    // for(int k = 0; k < NEQN * numODE; k++){
+    //     printf("%f ", y[k]);
+    // }
+    // printf("\nG: ");
+    // for(int k = 0; k < NEQN * numODE; k++){
+    //     printf("%f ", g[k]);
+    // }
+    // printf("\n\n");
 
     // double y[2];
     // double g[2];
@@ -90,7 +99,7 @@ int main(int argc, char** argv) {
     // g[0] = 1;
     // g[1] = 2;
 
-    double tEnd = 14;//seconds
+    double tEnd = 4;//seconds
 
     double t0 = 0;
     double h = 0.75;// seconds
@@ -160,20 +169,23 @@ int main(int argc, char** argv) {
         cudaMemcpy (g , gDevice , NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
 
         // for each system
-        for (int j=0; j<numODE; j++){
-            printf("%.4f ",t);
-            for (int i=0; i<NEQN;i++){
-                printf("%.4f ",y[i+2*j]);
+        if(1){
+            printf("System\tTime\ty0(t)\ty1(t)\n______________________________\n");
+            for (int j=0; j<numODE; j++){
+                printf("%d:\t%.4f\t",t, j);
+                for (int i=0; i<NEQN;i++){
+                    printf("%.4f\t",y[i+2*j]);
+                }
+                printf("\n");
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
-
-
          
         t = tNext ;
         tNext += h;
     }
     //printf("after intDriver %.2f %.2f\n",g[0],g[1]); 
+    printf("Done!\n");
     
      cudaFree ( gDevice );
      cudaFree ( yDevice );
