@@ -15,7 +15,7 @@
 #define EQUIL_LENGTH  2
 #define SPRING_CONSTANT  .04 // 1/25 -> w = 0.2 cycles per second
 #define MASS  1
-
+#define NUM_OF_EQUATIONS_PER_ELEMENT 3
 const float eps = 1.0e-10;
 
 __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
@@ -29,6 +29,7 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
 
     F[0] = g[0];
     F[1] = -cosf((float) t);//(y[0] + g[1]*t)*y[1];
+    F[2] = y[0] + y[1];
 }
 
  __device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN){
@@ -41,30 +42,30 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
 
 __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  double * yTemp, double *  yErr,int NEQN){
     //USING THIS: https://rosettacode.org/wiki/Runge-Kutta_method#C
-    double tempF[2];
-    double tempY[2];
+    double tempF[NUM_OF_EQUATIONS_PER_ELEMENT];
+    double tempY[NUM_OF_EQUATIONS_PER_ELEMENT];
     //double tempTime = t + h;
     //printf("Entering rk4Step for time = %f and h = %f\n", t, h);
     for (int i=0; i < NEQN; i++){
         
         double k0 = h * F[i];
         ////printf("Calculated k0 to be %f = %f (h) * %f (F[%d])\n", k0, h, F[i], i);
-        tempY[0] = y[0] + k0 / 2;
-        tempY[1] = y[1] + k0 / 2;
+        tempY[i] = y[i] + k0 / 2;
+        //tempY[1] = y[1] + k0 / 2;
         //f(t+ (h/2), y[i] + k0 / 2
         dydt(t+h/2,tempY, g, tempF, NEQN);
         double k1 = h * tempF[i];
         
 
-        tempY[0] = y[0] + k1 / 2;
-        tempY[1] = y[1] + k1 / 2;
+        tempY[i] = y[i] + k1 / 2;
+        //tempY[1] = y[1] + k1 / 2;
         //f(t + (h/2), y[i] + k1 / 2)
         dydt(t+h/2,tempY, g, tempF, NEQN);
         double k2 = h * tempF[i];
         
 
-        tempY[0] = y[0] + k2;
-        tempY[1] = y[1] + k2;
+        tempY[i] = y[i] + k2;
+        //tempY[1] = y[1] + k2;
         //f(t + h, y[i] + k2
         dydt(t+h, tempY, g, tempF, NEQN);
         double k3 = h * tempF[i];
@@ -118,13 +119,16 @@ __device__ void
         ////printf("tend (%f) - t(%f) = %f, h is now %f\n", tEnd, t, tEnd-t, h);
         
         // y and error vectors temporary until error determined
-        double yTemp [ 2 ], yErr [ 2 ];
+        double yTemp [ NUM_OF_EQUATIONS_PER_ELEMENT ], yErr [ NUM_OF_EQUATIONS_PER_ELEMENT ];
         
         // evaluate derivative
-        double F[ 2 ];
+        double F[ NUM_OF_EQUATIONS_PER_ELEMENT ];
 
         // function that takes the state and finds the derivative at the current time
         // for coupling just look within y!!! don't need to couple elements *yet*
+
+        //Ok so basically the y and g pointer is being incremented to the start of where that thread is going to start looking.
+        //This can be changed, but isn't necessary right now.
         dydt (t, (y + (tid * NEQN)), (g + (tid * NEQN)), F, NEQN);
 
         /*

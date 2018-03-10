@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     int numODE = 10;
 
     // number of equations, e.g. 157
-    int NEQN = 2;
+    int NEQN = 3;
     generateSampleInput(numODE,NEQN);
     printf("Generated Input\n");
 
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     // g[0] = 1;
     // g[1] = 2;
 
-    double tEnd = 4;//seconds
+    double tEnd = 100;//seconds
 
     double t0 = 0;
     double h = 0.75;// seconds
