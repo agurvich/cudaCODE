@@ -145,10 +145,10 @@ __device__ void
         */
 
         // take a trial step
-        riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
+        //riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
 
         //RK4 is not working when I just call it so I am improvising
-        //rk4Step(t, (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
+        rk4Step(t, (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
 
         // calculate error
         double err = 0.0;

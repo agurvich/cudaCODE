@@ -57,7 +57,7 @@ void generateSampleInput(int numODE,int NEQN){
 
 int main(int argc, char** argv) {
     // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 10;
+    int numODE = 4096;
 
     // number of equations, e.g. 157
     int NEQN = 3;
@@ -99,10 +99,10 @@ int main(int argc, char** argv) {
     // g[0] = 1;
     // g[1] = 2;
 
-    double tEnd = 100;//seconds
+    double tEnd = 10;//seconds
 
     double t0 = 0;
-    double h = 0.75;// seconds
+    double h = 0.05;// seconds
 
     // // Format host matrix into 1-d array
     // double * yHost ;
@@ -131,24 +131,20 @@ int main(int argc, char** argv) {
     gDevice = allocateDeviceAndCopy(g,NEQN * sizeof ( double ));
     printf("Copied over my y and g to CUDA\n");
     // setup grid dimensions
-    int blockSize ;
-    if ( numODE < 4194304) {
-        blockSize = 64;
+    int blockSize, gridSize ;
+    if ( numODE <= 1024) {
+        blockSize = numODE;
+        gridSize = 1;
     } 
-    else if ( numODE < 8388608) {
-        blockSize = 128;
-    } 
-    else if ( numODE < 16777216) {
-        blockSize = 256;
-    }
-    else {
-        blockSize = 512;
+    else{
+        blockSize = 1024;
+        gridSize = numODE / blockSize + 1;
     }
 
     //printf("%d threads/block\n",blockSize);
     dim3 dimBlock ( blockSize , 1);
     //printf("%d blocks\n",numODE/dimBlock.x);
-    dim3 dimGrid ( numODE / dimBlock .x+1, 1);
+    dim3 dimGrid ( gridSize, 1);
 
     // set initial time
     double t = t0;
@@ -162,7 +158,7 @@ int main(int argc, char** argv) {
             cudaMemcpy ( gDevice , g , NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
         }
 
-        intDriver <<<numODE , 1 >>> (t, tNext , numODE , NEQN, gDevice , yDevice );
+        intDriver <<<dimBlock , dimGrid >>> (t, tNext , numODE , NEQN, gDevice , yDevice );
         
          // transfer memory back to CPU
         cudaMemcpy (y , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
@@ -170,11 +166,11 @@ int main(int argc, char** argv) {
 
         // for each system
         if(1){
-            printf("System\tTime\ty0(t)\ty1(t)\n______________________________\n");
+            //printf("System\tTime\ty0(t)\ty1(t)\n______________________________\n");
             for (int j=0; j<numODE; j++){
-                printf("%d:\t%.4f\t",t, j);
+                printf("%.4f\t",t, j);
                 for (int i=0; i<NEQN;i++){
-                    printf("%.4f\t",y[i+2*j]);
+                    printf("%.4f\t\t",y[i+2*j]);
                 }
                 printf("\n");
             }
