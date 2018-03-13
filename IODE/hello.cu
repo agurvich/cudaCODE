@@ -36,13 +36,13 @@ void generateSampleInput(int numODE,int NEQN, char* inputFile){
             if (j < NEQN/2){
                 // between 0 and 1
                 value = (float) rand()/(float)(RAND_MAX);
+                // between -0.5 and 0.5
+                value-=0.5;
                 value*=INPUT_FMAX;
             }
             else{ 
                 // between 0 and 1
                 value = (float) rand()/(float)(RAND_MAX);
-                // between -0.5 and 0.5
-                value-=0.5;
                 value*=INPUT_GMAX;
             }
             // print this equation's initial condition to file
