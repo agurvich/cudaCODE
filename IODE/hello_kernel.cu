@@ -28,8 +28,8 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
     // F[1] = g[1];
 
     F[0] = g[0];
-    F[1] = -cosf((float) t);//(y[0] + g[1]*t)*y[1];
-    F[2] = y[0] + y[1];
+    F[1] = -cosf((float) t* g[1]);
+    F[2] = (y[0] + y[1])*g[2];
 }
 
  __device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN){
