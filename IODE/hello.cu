@@ -19,7 +19,7 @@ double * allocateDeviceAndCopy(double * hostPointer,int memsize){
     return devicePointer;
 }
 
-void generateSampleInput(int, int);
+void generateSampleInput(int, int, char*);
 //extern "C"
 
 #define INPUT_FMAX 2
@@ -27,8 +27,8 @@ void generateSampleInput(int, int);
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
-void generateSampleInput(int numODE,int NEQN){
-    FILE* stream = fopen("sample_input.txt", "w");
+void generateSampleInput(int numODE,int NEQN, char* inputFile){
+    FILE* stream = fopen(inputFile, "w");
     //fprintf(stream,"%d\n",NEQN);
     double value;
     for (int i=0; i<numODE; i++){
@@ -56,13 +56,33 @@ void generateSampleInput(int numODE,int NEQN){
 }
 
 int main(int argc, char** argv) {
+    char* inputFile;
+    char* outputFile;
+    if(argc == 1){
+        printf("Producing random input and output files\n");
+        inputFile = "sample_input.txt";
+        outputFile = "sample_output.txt";
+    }
+    else if(argc == 2){
+        inputFile = "sample_input.txt";
+        outputFile = argv[1];
+        printf("Producing random input and writing it to %s\n", argv[1]);
+    }
+    else if(argc == 3){
+        inputFile = argv[1];
+        outputFile = argv[2];
+        printf("Using %s as input file and %s as output file\n", inputFile, outputFile);
+    }
     // number of ode systems ("elements"), e.g. 10 million
     int numODE = 4096;
 
     // number of equations, e.g. 157
     int NEQN = 3;
-    generateSampleInput(numODE,NEQN);
-    printf("Generated Input\n");
+
+    if(argc < 3){ 
+        generateSampleInput(numODE,NEQN, inputFile);
+        printf("Generated Input\n");
+    }
 
     // the actual equations' initial conditions
     double * y;
@@ -70,14 +90,14 @@ int main(int argc, char** argv) {
 
     //This will initiallize stuff by reading the input file.
     //This will set NEQN and numODE to be correct
-    getStats(argv[1], &NEQN, &numODE);
+    getStats(inputFile, &NEQN, &numODE);
 
     //printf("Setting up my y and g arrays based on a NEQN of %d and a numODE of %d\n", NEQN, numODE);
     y = (double *)malloc(sizeof(double) * (NEQN) * (numODE));
     g = (double *)malloc(sizeof(double) * (NEQN) * (numODE));
 
 
-    parseInputs(argv[1], y, g, &NEQN, &numODE);
+    parseInputs(inputFile, y, g, &NEQN, &numODE);
     printf("Finished filling y and g matrices with their numbers\n");
     // printf("Parsed Inputs\n");
     // printf("numODE = %d, NEQN = %d\n", numODE, NEQN);
@@ -150,6 +170,7 @@ int main(int argc, char** argv) {
     double t = t0;
     double tNext = t + h;
     
+    FILE* outputStream = fopen(outputFile,"w");
     //printf("before intDriver %.2f %.2f\n",g[0],g[1]);
     while (t < tEnd ) {
         // transfer memory to GPU
@@ -168,13 +189,13 @@ int main(int argc, char** argv) {
         if(1){
             //printf("System\tTime\ty0(t)\ty1(t)\n______________________________\n");
             for (int j=0; j<numODE; j++){
-                printf("%.4f\t",t, j);
+                fprintf(outputStream,"%.4f\t",t, j);
                 for (int i=0; i<NEQN;i++){
-                    printf("%.4f\t\t",y[i+2*j]);
+                    fprintf(outputStream,"%.4f\t\t",y[i+2*j]);
                 }
-                printf("\n");
+                fprintf(outputStream,"\n");
             }
-            printf("\n");
+            fprintf(outputStream,"\n");
         }
          
         t = tNext ;
