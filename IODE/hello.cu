@@ -46,7 +46,7 @@ void generateSampleInput(int numODE,int NEQN, char* inputFile){
                 value*=INPUT_GMAX;
             }
             // print this equation's initial condition to file
-            fprintf(stream,"%f N ",value);
+            fprintf(stream,"%f\t",value);
         }
         // start a new element
         fprintf(stream,"\n");
@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
             for (int j=0; j<numODE; j++){
                 fprintf(outputStream,"%.4f\t",t, j);
                 for (int i=0; i<NEQN;i++){
-                    fprintf(outputStream,"%.4f\t\t",y[i+2*j]);
+                    fprintf(outputStream,"%.4f\t",y[i+2*j]);
                 }
                 fprintf(outputStream,"\n");
             }

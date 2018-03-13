@@ -16,7 +16,7 @@ void newElement(char* line, double * y, double * g, int* NEQN, int whichEle){
     unsigned loc = 0;
     unsigned loc2 = 0;
 	//printf("Handling line %d\n", whichEle);
-	for (tok = strtok(line, " N"); tok && *tok; tok = strtok(NULL, "N \n")){
+	for (tok = strtok(line, "\t"); tok && *tok; tok = strtok(NULL, "\t\n")){
 		
 		if(loc < (*NEQN)){
 			//printf("Dealing with %s and placing it in index %d * %d + %d = %d in Y\n", tok, whichEle, *NEQN, loc, (whichEle * (*NEQN)) + loc);
@@ -45,7 +45,7 @@ void getStats(char* inputFile,int* NEQN, int* numODE){
             *numODE = *numODE + 1;
             firstLineDone = 1;
         }
-        if (c == 'N' && !firstLineDone){
+        if (c == '\t' && !firstLineDone){
         	count++;
         }
     }
