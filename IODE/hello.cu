@@ -99,12 +99,19 @@ int main(int argc, char** argv) {
 
     parseInputs(inputFile, y, g, &NEQN, &numODE);
     printf("Finished filling y and g matrices with their numbers\n");
-    // printf("Parsed Inputs\n");
+    printf("Parsed Inputs\n");
     // printf("numODE = %d, NEQN = %d\n", numODE, NEQN);
     // printf("Printing my y and g arrays\n Y: ");
-    // for(int k = 0; k < NEQN * numODE; k++){
-    //     printf("%f ", y[k]);
-    // }
+    for(int k = 0; k < 16; k++){
+        printf("%f ", y[NEQN*k]);
+    }
+
+    printf("\n");
+
+    for(int k = 0; k < 16; k++){
+        printf("%f ", g[NEQN*k]);
+    }
+
     // printf("\nG: ");
     // for(int k = 0; k < NEQN * numODE; k++){
     //     printf("%f ", g[k]);
@@ -189,13 +196,12 @@ int main(int argc, char** argv) {
         if(1){
             //printf("System\tTime\ty0(t)\ty1(t)\n______________________________\n");
             for (int j=0; j<numODE; j++){
-                fprintf(outputStream,"%.4f\t",t, j);
+                fprintf(outputStream,"%.4f\t",t);
                 for (int i=0; i<NEQN;i++){
-                    fprintf(outputStream,"%.4f\t",y[i+2*j]);
+                    fprintf(outputStream,"%.4f\t",y[i+NEQN*j]);
                 }
                 fprintf(outputStream,"\n");
             }
-            fprintf(outputStream,"\n");
         }
          
         t = tNext ;
