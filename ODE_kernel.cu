@@ -81,7 +81,7 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
 
 __device__ void
  innerstep ( double t, const double tEnd , double * g,
- double * y, int NEQN) {
+ double * y, int NEQN, int method_flag) {
     int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
     // maximum and minimum allowable step sizes
     const double hMax = fabs ( tEnd - t);
@@ -111,9 +111,9 @@ __device__ void
         dydt (t, (y + (tid * NEQN)), (g + (tid * NEQN)), F, NEQN);
 
         // take a trial step
-        riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
-
-        //rk4Step(t, (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
+        if (method_flag == 0) riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
+        else if (method_flag ==1) rk4Step(t,
+            (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
 
         // calculate error
         double err = 0.0;
@@ -176,14 +176,14 @@ __device__ void
 __global__ void
 intDriver ( const double t, const double tEnd , const int numODE , 
             const int NEQN,
-            double * gGlobal , double * yGlobal ) {
+            double * gGlobal , double * yGlobal, int method_flag ) {
 
     // unique thread ID , based on local ID in block and block ID
     int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
 
     // ensure thread within limit
     if (tid < numODE ) {
-        innerstep(t, tEnd , gGlobal, yGlobal, NEQN);
+        innerstep(t, tEnd , gGlobal, yGlobal, NEQN, method_flag);
      }
 }
 
