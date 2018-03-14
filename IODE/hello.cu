@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
     printf("\n");
 
     for(int k = 0; k < 16; k++){
-        printf("%f ", g[NEQN*k]);
+        printf("%f ", g[1+NEQN*k]);
     }
 
     // printf("\nG: ");
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
     double * yDevice ;
     yDevice = allocateDeviceAndCopy(y,numODE * NEQN * sizeof ( double ));
     double * gDevice ;
-    gDevice = allocateDeviceAndCopy(g,NEQN * sizeof ( double ));
+    gDevice = allocateDeviceAndCopy(g,numODE * NEQN * sizeof ( double ));
     printf("Copied over my y and g to CUDA\n");
     // setup grid dimensions
     int blockSize, gridSize ;
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
         // transfer memory to GPU
         if (t!=t0){
             cudaMemcpy ( yDevice , y , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
-            cudaMemcpy ( gDevice , g , NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
+            cudaMemcpy ( gDevice , g , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
         }
 
         intDriver <<<dimBlock , dimGrid >>> (t, tNext , numODE , NEQN, gDevice , yDevice );

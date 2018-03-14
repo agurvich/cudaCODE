@@ -145,10 +145,10 @@ __device__ void
         */
 
         // take a trial step
-        //riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
+        riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
 
         //RK4 is not working when I just call it so I am improvising
-        rk4Step(t, (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
+        //rk4Step(t, (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
 
         // calculate error
         double err = 0.0;
@@ -214,47 +214,19 @@ intDriver ( const double t, const double tEnd , const int numODE ,
             const int NEQN,
             double * gGlobal , double * yGlobal ) {
 
-
-        
-        //if (threadIdx.x == 0) //printf("gGlobal[0] %.2f\n",gGlobal[0]);
-        //if (threadIdx.x == 0) //printf("gGlobal[1] %.2f\n",gGlobal[1]);
     // unique thread ID , based on local ID in block and block ID
     int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
-    if (tid == 1) printf("y11(%.2f)= %.4f\t",t,yGlobal[4]);
+    //if (tid == 1) printf("y11(%.2f)= %.4f\t",t,yGlobal[4]);
+    if (tid == 1 && t == 0){
+        for (int i=0;i<16;i++){
+            printf("g%d1(%.2f)=%.4f ",i,t,gGlobal[i*NEQN+1]);
+        }
+    }
 
     // ensure thread within limit
-        // (ABG): Each thread is given a system to work on
     if (tid < numODE ) {
 
-                
-                // for coupling elements, let's just do granular time steps here
-                // and assume systems are constant within the integrator, will 
-                // call integrator multiple times between t and tEnd
-                // coupling matrix, pass stuff around as necessary
-                // TODO
-
-        //I may adjust this later
-
-        // // local array with initial values
-        // double yLocal [ 2 ];
-
-        // // constant parameter (s)
-        //         // (ABG): doesn't need to be coalesced b.c. just 1 number 
-        // double gLocal[2]; 
-        //         gLocal[0] = gGlobal[0];// [tid ];
-        //         gLocal[1] = gGlobal[1];// [tid ];
-
-        // // load local array with initial values from global array
-        // for (int i = 0; i < NEQN ; ++i) {
-        //     yLocal [i] = yGlobal [tid + numODE * i];
-        // }
-
-        // call integrator for one time step
         rkckDriver(t, tEnd , gGlobal, yGlobal, NEQN);
-        // update global array with integrated values
-        // for (int i = 0; i < NEQN ; ++i) {
-        //     yGlobal [tid + numODE * i] = yLocal [i];
-        // }
      }
 }
 
