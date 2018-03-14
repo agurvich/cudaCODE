@@ -86,6 +86,9 @@ void CPU_intDriver(double t, double tEnd,  int numODE, int NEQN, double * g,doub
             if (method_flag==4){
                 rk4_step(t,(y+i*NEQN), F, h, (g+i*NEQN),yTemp, yErr,NEQN);
             }
+            for (int j =0; j<NEQN; j++){
+                (y+i*NEQN)[j] = yTemp[j];
+            }
             
         }
     

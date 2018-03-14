@@ -87,12 +87,13 @@ int main(int argc, char** argv) {
     }
 
     // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 4096;
+    int numODE = 100000;
 
     // number of equations, e.g. 157
     int NEQN = 3;
 
-    if(argc < 3){ 
+    // overwrite sampleInput
+    if(argc < 3 || 1){ 
         generateSampleInput(numODE,NEQN, inputFile);
         printf("Generated Input\n");
     }
@@ -141,12 +142,11 @@ int main(int argc, char** argv) {
 
     // set initial time
     double t = t0;
-    double tNext = t + h;
-    
-    FILE* outputStream = fopen(outputFile,"w");
+    double tNext = t + h; FILE* outputStream = fopen(outputFile,"w"); 
+    clock_t init_time = clock();
     while (t < tEnd ) {
         // write to output file before integrating, otherwise get minor phase shift
-        if(1){
+        if(0){
             for (int j=0; j<numODE; j++){
                 fprintf(outputStream,"%.4f\t",t);
                 for (int i=0; i<NEQN;i++){
@@ -176,6 +176,7 @@ int main(int argc, char** argv) {
         t = tNext ;
         tNext += h;
     }
+    fprintf(outputStream,"\n %f \n",1.0*(clock()-init_time)/CLOCKS_PER_SEC);
     printf("Done!\n");
     
     cudaFree ( gDevice );

@@ -71,7 +71,7 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         ////printf("About to calculate error using h = %f and t = %f\n meaning my timeTemp should be %f, but it is %f", h, t, h + t, timeTemp);
         
         //taking absolute difference between rk4 and riemann to determine eror
-        yErr[i] = fabs(yTemp[i] - (y[i] + F[i]*h));
+        yErr[i] = 0; //fabs(yTemp[i] - (y[i] + F[i]*h));
         //yErr[i]= yTemp[i]/(pow(((timeTemp)*(timeTemp)) / 4 + 1, 2)) - 1;
         //yErr[i] = (y[i]/y2) - 1;
         //printf("yErr[%d] = %f (abs(yTemp[%d](%f) - (y[%d](%f) + F[%d](%f)*h(%f)))\n", i, yErr[i], i, yTemp[i], i, y[i], i, F[i],h);
@@ -118,6 +118,7 @@ __device__ void
         // calculate error
         double err = 0.0;
         int nanFlag = 0;
+
         for (int i = 0; i < (NEQN) ; ++i) {
             if ( isnan ( yErr [i])) nanFlag = 1;
             // when we take the max, we necessarily limit each set of equations to proceed
