@@ -113,7 +113,7 @@ __device__ void
         // take a trial step
         if (method_flag == 0) riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
         else if (method_flag ==1) rk4Step(t,
-            (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
+            (y + (tid * NEQN)), F, h, (g + (tid * NEQN)), yTemp , yErr, NEQN);
 
         // calculate error
         double err = 0.0;
