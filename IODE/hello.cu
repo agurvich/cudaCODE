@@ -180,6 +180,17 @@ int main(int argc, char** argv) {
     FILE* outputStream = fopen(outputFile,"w");
     //printf("before intDriver %.2f %.2f\n",g[0],g[1]);
     while (t < tEnd ) {
+        // write to output file before integrating, otherwise get minor phase shift
+        if(1){
+            //printf("System\tTime\ty0(t)\ty1(t)\n______________________________\n");
+            for (int j=0; j<numODE; j++){
+                fprintf(outputStream,"%.4f\t",t);
+                for (int i=0; i<NEQN;i++){
+                    fprintf(outputStream,"%.4f\t",y[i+NEQN*j]);
+                }
+                fprintf(outputStream,"\n");
+            }
+        }
         // transfer memory to GPU
         if (t!=t0){
             cudaMemcpy ( yDevice , y , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
@@ -192,18 +203,7 @@ int main(int argc, char** argv) {
         cudaMemcpy (y , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
         cudaMemcpy (g , gDevice , NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
 
-        // for each system
-        if(1){
-            //printf("System\tTime\ty0(t)\ty1(t)\n______________________________\n");
-            for (int j=0; j<numODE; j++){
-                fprintf(outputStream,"%.4f\t",t);
-                for (int i=0; i<NEQN;i++){
-                    fprintf(outputStream,"%.4f\t",y[i+NEQN*j]);
-                }
-                fprintf(outputStream,"\n");
-            }
-        }
-         
+      
         t = tNext ;
         tNext += h;
     }

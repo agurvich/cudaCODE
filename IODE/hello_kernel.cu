@@ -214,11 +214,13 @@ intDriver ( const double t, const double tEnd , const int numODE ,
             const int NEQN,
             double * gGlobal , double * yGlobal ) {
 
+
         
         //if (threadIdx.x == 0) //printf("gGlobal[0] %.2f\n",gGlobal[0]);
         //if (threadIdx.x == 0) //printf("gGlobal[1] %.2f\n",gGlobal[1]);
     // unique thread ID , based on local ID in block and block ID
     int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
+    if (tid == 1) printf("y11(%.2f)= %.4f\t",t,yGlobal[4]);
 
     // ensure thread within limit
         // (ABG): Each thread is given a system to work on
