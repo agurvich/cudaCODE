@@ -92,7 +92,6 @@ int main(int argc, char** argv) {
     //This will set NEQN and numODE to be correct
     getStats(inputFile, &NEQN, &numODE);
 
-    //printf("Setting up my y and g arrays based on a NEQN of %d and a numODE of %d\n", NEQN, numODE);
     y = (double *)malloc(sizeof(double) * (NEQN) * (numODE));
     g = (double *)malloc(sizeof(double) * (NEQN) * (numODE));
 
@@ -100,8 +99,7 @@ int main(int argc, char** argv) {
     parseInputs(inputFile, y, g, &NEQN, &numODE);
     printf("Finished filling y and g matrices with their numbers\n");
     printf("Parsed Inputs\n");
-    // printf("numODE = %d, NEQN = %d\n", numODE, NEQN);
-    // printf("Printing my y and g arrays\n Y: ");
+
     for(int k = 0; k < 16; k++){
         printf("%f ", y[NEQN*k]);
     }
@@ -112,44 +110,10 @@ int main(int argc, char** argv) {
         printf("%f ", g[1+NEQN*k]);
     }
 
-    // printf("\nG: ");
-    // for(int k = 0; k < NEQN * numODE; k++){
-    //     printf("%f ", g[k]);
-    // }
-    // printf("\n\n");
-
-    // double y[2];
-    // double g[2];
-    // y[0] = 0;
-    // y[1] = 0; // cycles per second, matches spring constant
-
-    // g[0] = 1;
-    // g[1] = 2;
-
     double tEnd = 10;//seconds
 
     double t0 = 0;
     double h = 0.05;// seconds
-
-    // // Format host matrix into 1-d array
-    // double * yHost ;
-    // yHost = ( double *) malloc ( numODE * NEQN * sizeof ( double ));
-    //yHost[0] = y[0];
-    //yHost[1] = y[1];
-
-    // double * gHost;
-    // gHost = (double *) malloc ( NEQN * sizeof(double));
-    //gHost[0] = g[0];
-    //gHost[1] = g[1];
-
-    /*
-
-    for (int i = 0; i < numODE ; ++i) {
-        for (int j = 0; j < NEQN ; ++j) {
-            yHost [i + numODE * j] = y[i][j];
-        }
-    }
-    */
 
     // allocate memory on the device and copy over
     double * yDevice ;
@@ -168,9 +132,7 @@ int main(int argc, char** argv) {
         gridSize = numODE / blockSize + 1;
     }
 
-    //printf("%d threads/block\n",blockSize);
     dim3 dimBlock ( blockSize , 1);
-    //printf("%d blocks\n",numODE/dimBlock.x);
     dim3 dimGrid ( gridSize, 1);
 
     // set initial time
@@ -178,11 +140,9 @@ int main(int argc, char** argv) {
     double tNext = t + h;
     
     FILE* outputStream = fopen(outputFile,"w");
-    //printf("before intDriver %.2f %.2f\n",g[0],g[1]);
     while (t < tEnd ) {
         // write to output file before integrating, otherwise get minor phase shift
         if(1){
-            //printf("System\tTime\ty0(t)\ty1(t)\n______________________________\n");
             for (int j=0; j<numODE; j++){
                 fprintf(outputStream,"%.4f\t",t);
                 for (int i=0; i<NEQN;i++){
@@ -207,7 +167,6 @@ int main(int argc, char** argv) {
         t = tNext ;
         tNext += h;
     }
-    //printf("after intDriver %.2f %.2f\n",g[0],g[1]); 
     printf("Done!\n");
     
      cudaFree ( gDevice );

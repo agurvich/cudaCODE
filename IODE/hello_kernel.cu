@@ -19,17 +19,11 @@
 const float eps = 1.0e-10;
 
 __device__ void dydt(double t, double * y, double * g, double * F, int NEQN){
-    ////printf("I have entered dydt\n");
-    // r equation
-    // F[0] = g[1]*SPRING_CONSTANT*(y[0]-EQUIL_LENGTH) + g[0];
-    // //F[0] = .2*2*(y[0]-.04);
 
-    // // phi equation
-    // F[1] = g[1];
-
-    F[0] = g[0];
-    F[1] = -cosf((float) t* g[1]);
-    F[2] = (y[0] + y[1])*g[2];
+    // test set of equations that have closed forms
+    F[0] = g[0];//y[0] = g[0]t+y00
+    F[1] = -cosf((float) t* g[1]);//y[1] = -1/g[1]sin(g[1] t) + y10
+    F[2] = (y[0] + y[1])*g[2]; //y[2] = (g[0]t^2 + (y00+y10)t + 1/g[1]^2cos(g[1]t))*g[2] + y20
 }
 
  __device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN){
@@ -44,36 +38,30 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
     //USING THIS: https://rosettacode.org/wiki/Runge-Kutta_method#C
     double tempF[NUM_OF_EQUATIONS_PER_ELEMENT];
     double tempY[NUM_OF_EQUATIONS_PER_ELEMENT];
-    //double tempTime = t + h;
-    //printf("Entering rk4Step for time = %f and h = %f\n", t, h);
     for (int i=0; i < NEQN; i++){
         
+        //calculate k0
         double k0 = h * F[i];
-        ////printf("Calculated k0 to be %f = %f (h) * %f (F[%d])\n", k0, h, F[i], i);
+
+        //calculate k1
         tempY[i] = y[i] + k0 / 2;
-        //tempY[1] = y[1] + k0 / 2;
-        //f(t+ (h/2), y[i] + k0 / 2
         dydt(t+h/2,tempY, g, tempF, NEQN);
         double k1 = h * tempF[i];
-        
 
+        //calculate k2
         tempY[i] = y[i] + k1 / 2;
-        //tempY[1] = y[1] + k1 / 2;
-        //f(t + (h/2), y[i] + k1 / 2)
         dydt(t+h/2,tempY, g, tempF, NEQN);
         double k2 = h * tempF[i];
-        
 
+        //calculate k3
         tempY[i] = y[i] + k2;
-        //tempY[1] = y[1] + k2;
-        //f(t + h, y[i] + k2
         dydt(t+h, tempY, g, tempF, NEQN);
         double k3 = h * tempF[i];
-        
-        ////printf("I have calculated my k values to be %f, %f, %f, %f\n", k0,k1,k2,k3);
+
+        // combine using RK4 weighting
         yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)/6;
+
         double timeTemp = h + t;
-        
         //testing for error
         double y2 = ((timeTemp * timeTemp) / 4) + 1.0;
         y2 = y2 * y2;
@@ -92,11 +80,9 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
 }
 
 __device__ void
- rkckDriver ( double t, const double tEnd , double * g,
+ innerstep ( double t, const double tEnd , double * g,
  double * y, int NEQN) {
     int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
-    //printf("I am thread %d and will be working on indeces %d and %d\n", tid, tid * NEQN, tid * NEQN + 1);
-
     // maximum and minimum allowable step sizes
     const double hMax = fabs ( tEnd - t);
     const double hMin = 1.0e-20;
@@ -105,18 +91,12 @@ __device__ void
     double h = 0.5 * fabs ( tEnd - t);
     // integrate until specified end time
         while (t < tEnd ) {
-                // for implicit solver, there would be a step size estimate here
-                // maybe every 25 steps or something so overhead is invested so that
-                // you don't reject steps as often. 
-        
+        // for implicit solver, there would be a step size estimate here
+        // maybe every 25 steps or something so overhead is invested so that
+        // you don't reject steps as often. 
+    
         // limit step size based on remaining time
         h = fmin ( tEnd - t, h);
-        
-        
-        ////printf("The min function determined that h is now %f\n", h);
-        // //printf("h is %f inside loop\n", h);
-        
-        ////printf("tend (%f) - t(%f) = %f, h is now %f\n", tEnd, t, tEnd-t, h);
         
         // y and error vectors temporary until error determined
         double yTemp [ NUM_OF_EQUATIONS_PER_ELEMENT ], yErr [ NUM_OF_EQUATIONS_PER_ELEMENT ];
@@ -124,30 +104,15 @@ __device__ void
         // evaluate derivative
         double F[ NUM_OF_EQUATIONS_PER_ELEMENT ];
 
-        // function that takes the state and finds the derivative at the current time
-        // for coupling just look within y!!! don't need to couple elements *yet*
 
-        //Ok so basically the y and g pointer is being incremented to the start of where that thread is going to start looking.
+        //Ok so basically the y and g pointer is being incremented 
+        //to the start of where that thread is going to start looking.
         //This can be changed, but isn't necessary right now.
         dydt (t, (y + (tid * NEQN)), (g + (tid * NEQN)), F, NEQN);
-
-        /*
-        if (threadIdx.x == 0) //printf("t %.2f\t",t);
-        if (threadIdx.x == 0) //printf("y[0] %.2f\t",y[0]);
-        if (threadIdx.x == 0) //printf("F[0] %.2f (%.2f)\t",F[0],1.0);
-        if (threadIdx.x == 0) //printf("g[0] %.2f\n",g[0]);
-
-
-        if (threadIdx.x == 0) //printf("t %.2f\t",t);
-        if (threadIdx.x == 0) //printf("y[1] %.2f\t",y[1]);
-        if (threadIdx.x == 0) //printf("F[1] %.2f (%.2f)\t",F[1],y[0]+2*t-y[1]);
-        if (threadIdx.x == 0) //printf("g[1] %.2f\n",g[1]);
-        */
 
         // take a trial step
         riemannStep ((y + (tid * NEQN)), F, h, yTemp , yErr, NEQN);
 
-        //RK4 is not working when I just call it so I am improvising
         //rk4Step(t, (y + (threadIdx.x * NEQN)), F, h, (g + (threadIdx.x * NEQN)), yTemp , yErr, NEQN);
 
         // calculate error
@@ -155,17 +120,16 @@ __device__ void
         int nanFlag = 0;
         for (int i = 0; i < (NEQN) ; ++i) {
             if ( isnan ( yErr [i])) nanFlag = 1;
-                        // when we take the max, we necessarily limit each set of equations to proceed
-                        // at the rate of the *slowest* equation. If we relax this constraint (and maybe 
-                        // give each equation its own thread, we could see some serious optimization if 
-                        // shared memory was used correctly
+            // when we take the max, we necessarily limit each set of equations to proceed
+            // at the rate of the *slowest* equation. If we relax this constraint (and maybe 
+            // give each equation its own thread, we could see some serious optimization if 
+            // shared memory was used correctly
+
             //Brian changed this
             //err = fmax(err, yErr[i]);
             ////printf("yErr = %f, y = %f, h = %f, f = %f\n", yErr[i], y[i], h, F[i] );
             //err = fmax(err, fabs(yErr[i]));
             err = fmax (err , fabs(yErr[i] / fabs (yTemp[i])));
-            //printf("err = %f / (%f + (%f*%f)) + %f\n fabs(h*F[i])=%.16f\n", yErr[i], y[i], h, F[i], TINY, h*F[i]);
-            //printf("Error is currently %f on the %d th iteration\n", err, i);
 
         }
         //printf("Error is calculated to be %f\n", err);
@@ -216,17 +180,10 @@ intDriver ( const double t, const double tEnd , const int numODE ,
 
     // unique thread ID , based on local ID in block and block ID
     int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
-    //if (tid == 1) printf("y11(%.2f)= %.4f\t",t,yGlobal[4]);
-    if (tid == 1 && t == 0){
-        for (int i=0;i<16;i++){
-            printf("g%d1(%.2f)=%.4f ",i,t,gGlobal[i*NEQN+1]);
-        }
-    }
 
     // ensure thread within limit
     if (tid < numODE ) {
-
-        rkckDriver(t, tEnd , gGlobal, yGlobal, NEQN);
+        innerstep(t, tEnd , gGlobal, yGlobal, NEQN);
      }
 }
 
