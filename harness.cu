@@ -8,7 +8,7 @@
 //#include <cutil.h>
 
 // includes, kernels
-#include "hello.h"
+#include "harness.h"
 #include "input.c"
 ////////////////////////////////////////////////////////////////////////////////
 // declarations, forward

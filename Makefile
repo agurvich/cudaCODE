@@ -1,14 +1,16 @@
 # Add source files here
-EXECUTABLE	:= hello
+EXECUTABLE	:= POSTERR
 
 # Cuda source files (compiled with cudacc)
-CUFILES		:= hello.cu
+CUFILES		:= harness.cu
 
 # C/C++ source files (compiled with gcc / c++)
 #CCFILES		:= matrixmul_gold.cpp
 
-CUDEPS		:= hello_kernel.cu
+CUDEPS		:= ODE_kernel.cu;
 
 
-hellomake: hello.cu hello_kernel.cu; nvcc -arch=sm_20 -o $(EXECUTABLE) $(CUFILES) $(CUDEPS) 
+hellomake: harness.cu ODE_kernel.cu; nvcc -arch=sm_20 -o $(EXECUTABLE) $(CUFILES) $(CUDEPS) 
 
+clean: 
+	rm POSTERR #*.o
