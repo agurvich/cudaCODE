@@ -93,7 +93,7 @@ def make_plots(method,dt):
         fig.set_size_inches(16,9)
 
         plt.savefig('plots/%s_%.2f_curve_overlay_%d.png'%(method,dt,index))
-        fig.close()
+        plt.close(fig)
 
     for cindex in xrange(16):
         plotCurveOverlay(cindex)
@@ -120,7 +120,7 @@ def make_plots(method,dt):
     fig.set_size_inches(16,9)
 
     plt.savefig('plots/%s_%.2f_residuals.png'%(method,dt))
-    fig.close()
+    plt.close(fig)
 
     ## calculate percent error
     fig = plt.figure()
@@ -140,10 +140,9 @@ def make_plots(method,dt):
     nameAxes(ax,None,'t (sec)','|(yt-y)/yt|',subtitle = method)
     fig.set_size_inches(8,4.5)
     plt.savefig('plots/%s_%.2f_percent_errors.png'%(method,dt))
+    plt.close(fig)
 
     fig,axs = plt.subplots(4,4,sharey=True,sharex=True)
-    fig.close()
-
     axs = axs.flatten()
 
     for i in xrange(16):
@@ -157,7 +156,7 @@ def make_plots(method,dt):
 
     fig.set_size_inches(24,24)
     plt.savefig('plots/%s_%.2f_mega_percent_errors.png'%(method,dt))
-    fig.close()
+    plt.close(fig)
 
     ## avg percent error
     fig =plt.figure()
@@ -171,7 +170,7 @@ def make_plots(method,dt):
     nameAxes(ax,None,'t (sec)',r'$\langle$|(yt-y)/yt|$\rangle$',subtitle = method,supertitle='%d systems'%maxnum)
     fig.set_size_inches(8,4.5)
     plt.savefig('plots/%s_%.2f_avg_percent_errors.png'%(method,dt))
-    fig.close()
+    plt.close(fig)
 
 
     with h5py.File("catalog.hdf5",'a') as handle:
@@ -182,9 +181,47 @@ def make_plots(method,dt):
 
 
 
-for method in ['riemann','rk4']:
-    for dt in [0.01,0.05,0.1,0.5,1]:
-        print 'working on',method,dt
-        make_plots(method,dt)
+def run_all():
+    for method in ['riemann','rk4']:
+        for dt in [0.01,0.05,0.1,0.5,1]:
+            print 'working on',method,dt
+            make_plots(method,dt)
         
+def compare_catalog():
+    errsss= []
+    dts = [0.01,0.05,0.1,0.5,1]
+    with h5py.File("catalog.hdf5",'r') as handle:
+        for method in ['riemann','rk4']:
+
+            if method == 'riemann':
+                method_flag = 0
+            elif method == 'rk4':
+                method_flag = 1
+
+            errss =[]
+            for i in xrange(3):
+                errs = []
+                for dt in dts:
+                    group = handle["%d_%.2f"%(method_flag,dt)]
+                    errs+=[np.mean(group['abs_mean_pct_err%d'%i])] ## average over time
+                errss+=[errs]
+            errsss+=[errss]
+
+    colors = get_distinct(3)
+    print np.shape(errsss)
+    for i in xrange(3):
+        label = 'riemann' if i ==0 else None
+        plt.plot(dts,errsss[0][i],'--',label=label,lw=3,c=colors[i])
+        label = 'rk4' if i ==0 else None
+        plt.plot(dts,errsss[1][i],label=label,lw=3,c=colors[i])
+    nameAxes(plt.gca(),None,'h (s)','avg |pct error|',make_legend=1,logflag=(1,1))
+    plt.gcf().set_size_inches(16,9)
+    plt.savefig('plots/error_vs_stepsize.png')
+    plt.close()
+
+def main():
+    #run_all()
+    compare_catalog()
+    
+main()
 
