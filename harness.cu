@@ -58,6 +58,8 @@ void generateSampleInput(int numODE,int NEQN, char* inputFile){
 int main(int argc, char** argv) {
     char* inputFile;
     char* outputFile;
+    int method_flag=0;
+    double outer_dt=0.05;
     if(argc == 1){
         printf("Producing random input and output files\n");
         inputFile = "sample_input.txt";
@@ -72,7 +74,17 @@ int main(int argc, char** argv) {
         inputFile = argv[1];
         outputFile = argv[2];
         printf("Using %s as input file and %s as output file\n", inputFile, outputFile);
+
     }
+    else if(argc == 5){
+        inputFile = argv[1];
+        outputFile = argv[2];
+        printf("Using %s as input file and %s as output file\n", inputFile, outputFile);
+        method_flag = atoi(argv[3]);
+        outer_dt = atof(argv[4]);
+        printf("Using method %d with step size %.2f\n",method_flag,outer_dt);
+    }
+
     // number of ode systems ("elements"), e.g. 10 million
     int numODE = 4096;
 
@@ -100,20 +112,10 @@ int main(int argc, char** argv) {
     printf("Finished filling y and g matrices with their numbers\n");
     printf("Parsed Inputs\n");
 
-    for(int k = 0; k < 16; k++){
-        printf("%f ", y[NEQN*k]);
-    }
-
-    printf("\n");
-
-    for(int k = 0; k < 16; k++){
-        printf("%f ", g[1+NEQN*k]);
-    }
-
     double tEnd = 10;//seconds
 
     double t0 = 0;
-    double h = 0.05;// seconds
+    double h = outer_dt;// seconds
 
     // allocate memory on the device and copy over
     double * yDevice ;
@@ -157,7 +159,7 @@ int main(int argc, char** argv) {
             cudaMemcpy ( gDevice , g , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
         }
 
-        intDriver <<<dimBlock , dimGrid >>> (t, tNext , numODE , NEQN, gDevice , yDevice );
+        //intDriver <<<dimBlock , dimGrid >>> (t, tNext , numODE , NEQN, gDevice , yDevice, method_flag);
         
          // transfer memory back to CPU
         cudaMemcpy (y , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
@@ -169,7 +171,7 @@ int main(int argc, char** argv) {
     }
     printf("Done!\n");
     
-     cudaFree ( gDevice );
-     cudaFree ( yDevice );
+    cudaFree ( gDevice );
+    cudaFree ( yDevice );
 }
 
