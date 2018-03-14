@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
             cudaMemcpy ( gDevice , g , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
         }
 
-        //intDriver <<<dimBlock , dimGrid >>> (t, tNext , numODE , NEQN, gDevice , yDevice, method_flag);
+        intDriver <<<dimBlock , dimGrid >>> (t, tNext , numODE , NEQN, gDevice , yDevice, method_flag);
         
          // transfer memory back to CPU
         cudaMemcpy (y , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
