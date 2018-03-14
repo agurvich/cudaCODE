@@ -7,13 +7,16 @@ input_values = np.genfromtxt('sample_input.txt')
 input_values = input_values.T[:-1].T # strip the last row which has a hanging delimiter
 
 method = 'rk4'
-vals = np.genfromtxt('output.txt',unpack=1)
+dt = 0.05
+
+vals = np.genfromtxt('%s_%.2f_output.txt'%(method,dt),unpack=1)
 
 tss = vals[0]
 
 nelements = np.sum(tss==tss[0])
 tss = tss.reshape(-1,nelements).T
 ts = tss[0] # same for everyone
+assert dt == ts[1]-ts[0]
 
 nYs = len(vals[1:]) #number of ys
 ysss = []
@@ -39,59 +42,117 @@ def eqn3(t,y00,y10,y20,g00,g10,g20):
     return (0.5*g00*t**2 + (y10+y00)*t + (1.0/g10**2)*np.cos(g10*t) )*g20 + y20
 
 colors = get_distinct(nYs)
-maxnum = 16
-fig,axs = plt.subplots(3,1,sharex=True)
+maxnum = nelements
+
 ## calculate y0
-ax = axs[0]
 theo_y1ss =[]
 for element in ics.T[:maxnum]:
     y0,g0 = element[0],element[len(element)/2 ]
     theo_y1ss+=[eqn1(ts,y0,g0)]
 
-ax.plot(ts,ysss[0][0],c=colors[0],lw=3)
-ax.plot(ts,theo_y1ss[0],'k--',lw=3)
-nameAxes(ax,None,0,'y0',supertitle = method)
-
-ax = axs[1]
 theo_y2ss = []
 ## caclulate y1
 for element in ics.T[:maxnum]:
     y0,g0 = element[1],element[1+len(element)/2 ]
     theo_y2ss+=[eqn2(ts,y0,g0)]
 
-ax.plot(ts,ysss[1][0],c=colors[1],lw=3)
-ax.plot(ts,theo_y2ss[0],'k--',lw=3)
-nameAxes(ax,None,0,'y1',supertitle = method)
-
-ax = axs[2]
 ## calculate y2
 theo_y3ss = []
-for element in ics.T[:16]:
+for element in ics.T[:maxnum]:
     y3s = eqn3(ts,*element)
     theo_y3ss+=[y3s]
 
-ax.plot(ts,ysss[-1][0],c=colors[2],lw=3)
-ax.plot(ts,theo_y3ss[0],'k--',lw=3)
-nameAxes(ax,None,'t (sec)','y2',supertitle = method)
+def plotCurveOverlay(index):
+    fig,axs = plt.subplots(3,1,sharex=True)
+    ax = axs[0]
+    ax.plot(ts,ysss[0][index],c=colors[0],lw=3)
+    ax.plot(ts,theo_y1ss[index],'k--',lw=3)
+    nameAxes(ax,None,0,'y0',supertitle = method)
+
+    ax = axs[1]
+    ax.plot(ts,ysss[1][index],c=colors[1],lw=3)
+    ax.plot(ts,theo_y2ss[index],'k--',lw=3)
+    nameAxes(ax,None,0,'y1',supertitle = method)
+
+    ax = axs[2]
+    ax.plot(ts,ysss[-1][index],c=colors[2],lw=3)
+    ax.plot(ts,theo_y3ss[index],'k--',lw=3)
+    nameAxes(ax,None,'t (sec)','y2',supertitle = method)
+    plt.subplots_adjust(hspace=0)
+    fig.set_size_inches(16,9)
+
+    plt.savefig('plots/%s_%.2f_curve_overlay'%(method,dt))
+
+for cindex in xrange(16):
+    plotCurveOverlay(cindex)
+
+fig,axs = plt.subplots(3,1,sharex=True)
+####### calculate residuals over time
+
+## calculate y0
+ax = axs[0]
+ax.plot(ts,theo_y1ss[0]-ysss[0][0],c=colors[0],lw=3)
+ax.plot(ts,0*ts,'k--',lw=3)
+nameAxes(ax,None,0,'yt0-y0',supertitle = method)
+
+ax = axs[1]
+ax.plot(ts,theo_y2ss[0]-ysss[1][0],c=colors[1],lw=3)
+ax.plot(ts,0*ts,'k--',lw=3)
+nameAxes(ax,None,0,'yt1-y1',supertitle = method)
+
+ax = axs[2]
+ax.plot(ts,theo_y3ss[0]-ysss[-1][0],c=colors[2],lw=3)
+ax.plot(ts,0*ts,'k--',lw=3)
+nameAxes(ax,None,'t (sec)','yt2-y2',supertitle = method)
 plt.subplots_adjust(hspace=0)
 fig.set_size_inches(16,9)
 
-plt.savefig('curve_overlay')
+plt.savefig('plots/%s_%.2f_residuals'%(method,dt))
 
-"""
-#rts,rys0,rys1 = np.genfromtxt('results.txt',unpack=1)
+## calculate percent error
+plt.figure()
+ax = plt.gca()
 
-fn = lambda ts: np.exp(3./2 * ts**2)
-fn = lambda ts: -np.sin(ts)
+mega_residuals0 =[(theo_y1ss[i]-ysss[0][i])/theo_y1ss[i] for i in xrange(maxnum)] 
+mega_residuals1 =[(theo_y2ss[i]-ysss[1][i])/theo_y2ss[i] for i in xrange(maxnum)] 
+mega_residuals2 =[(theo_y3ss[i]-ysss[2][i])/theo_y3ss[i] for i in xrange(maxnum)] 
 
-plt.plot(ts,ys1,'r',lw=3,label='Riemann')
-plt.plot(rts,rys1,'g:',lw=3,label='RK4')
-plt.plot(ts,fn(ts),'k--',lw=3)
+ax.plot(ts,0*ts,'k--',lw=3)
 
-plt.plot(ts,[0]*len(ts))
-plt.plot([0,0],[-2,1])
+ax.plot(ts,mega_residuals0[0],lw=3,c=colors[0])
+ax.plot(ts,mega_residuals1[0],lw=3,c=colors[1])
+ax.plot(ts,mega_residuals2[0],lw=3,c=colors[2])
 
-nameAxes(plt.gca(),None,'t',None,supertitle = 'dt = %.1e'%(ts[1]-ts[0]),logflag=(1,0),make_legend=1)
 
-plt.savefig('compare')
-"""
+nameAxes(ax,None,'t (sec)','|(yt-y)/yt|',subtitle = method)
+fig.set_size_inches(8,4.5)
+plt.savefig('plots/%s_%.2f_percent_errors'%(method,dt))
+
+fig,axs = plt.subplots(4,4,sharey=True,sharex=True)
+
+axs = axs.flatten()
+
+for i in xrange(16):
+    ax = axs[i]
+    ax.plot(ts,np.abs(mega_residuals0[i]),lw=3,c=colors[0])
+    ax.plot(ts,np.abs(mega_residuals1[i]),lw=3,c=colors[1])
+    ax.plot(ts,np.abs(mega_residuals2[i]),lw=3,c=colors[2])
+
+ax.set_ylim(0,0.05)
+plt.subplots_adjust(hspace=0,wspace=0)
+
+fig.set_size_inches(24,24)
+plt.savefig('plots/%s_%.2f_mega_percent_errors'%(method,dt))
+
+## avg percent error
+plt.figure()
+ax = plt.gca()
+
+ax.plot(ts,0*ts,'k--',lw=3)
+ax.plot(ts,np.mean(np.abs(mega_residuals0),axis=0),lw=3,c=colors[0])
+ax.plot(ts,np.mean(np.abs(mega_residuals1),axis=0),lw=3,c=colors[1])
+ax.plot(ts,np.mean(np.abs(mega_residuals2),axis=0),lw=3,c=colors[2])
+
+nameAxes(ax,None,'t (sec)',r'$\langle$|(yt-y)/yt|$\rangle$',subtitle = method,supertitle='%d systems'%maxnum)
+fig.set_size_inches(8,4.5)
+plt.savefig('plots/%s_%.2f_avg_percent_errors'%(method,dt))
