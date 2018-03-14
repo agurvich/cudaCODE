@@ -8,6 +8,7 @@
 //#include <cutil.h>
 
 // includes, kernels
+#include "ODE_CPU.c"
 #include "harness.h"
 #include "input.c"
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +123,8 @@ int main(int argc, char** argv) {
     yDevice = allocateDeviceAndCopy(y,numODE * NEQN * sizeof ( double ));
     double * gDevice ;
     gDevice = allocateDeviceAndCopy(g,numODE * NEQN * sizeof ( double ));
-    printf("Copied over my y and g to CUDA\n");
+    printf("Copied over my y and g to CUDA\n");    
+
     // setup grid dimensions
     int blockSize, gridSize ;
     if ( numODE <= 1024) {
@@ -153,17 +155,22 @@ int main(int argc, char** argv) {
                 fprintf(outputStream,"\n");
             }
         }
-        // transfer memory to GPU
-        if (t!=t0){
-            cudaMemcpy ( yDevice , y , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
-            cudaMemcpy ( gDevice , g , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
-        }
+        if (method_flag < 3){
+            // transfer memory to GPU
+            if (t!=t0){
+                cudaMemcpy ( yDevice , y , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
+                cudaMemcpy ( gDevice , g , numODE * NEQN * sizeof ( double ), cudaMemcpyHostToDevice );
+            }
 
-        intDriver <<<dimBlock , dimGrid >>> (t, tNext , numODE , NEQN, gDevice , yDevice, method_flag);
-        
-         // transfer memory back to CPU
-        cudaMemcpy (y , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
-        cudaMemcpy (g , gDevice , NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
+            intDriver <<<dimBlock , dimGrid >>> (t, tNext , numODE , NEQN, gDevice , yDevice, method_flag);
+            
+             // transfer memory back to CPU
+            cudaMemcpy (y , yDevice , numODE * NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
+            cudaMemcpy (g , gDevice , NEQN * sizeof ( double ), cudaMemcpyDeviceToHost );
+        }
+        else{
+            CPU_intDriver(t, tNext,  numODE, NEQN,  g, y,method_flag);
+        }
 
       
         t = tNext ;
