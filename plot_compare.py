@@ -7,13 +7,16 @@ input_values = np.genfromtxt('sample_input.txt')
 input_values = input_values.T[:-1].T # strip the last row which has a hanging delimiter
 
 method = 'rk4'
-vals = np.genfromtxt('output.txt',unpack=1)
+dt = 0.05
+
+vals = np.genfromtxt('%s_%.2f_output.txt'%(method,dt),unpack=1)
 
 tss = vals[0]
 
 nelements = np.sum(tss==tss[0])
 tss = tss.reshape(-1,nelements).T
 ts = tss[0] # same for everyone
+assert dt == ts[1]-ts[0]
 
 nYs = len(vals[1:]) #number of ys
 ysss = []
@@ -78,7 +81,7 @@ def plotCurveOverlay(index):
     plt.subplots_adjust(hspace=0)
     fig.set_size_inches(16,9)
 
-    plt.savefig('curve_overlay_%d'%index)
+    plt.savefig('plots/%s_%.2f_curve_overlay'%(method,dt))
 
 for cindex in xrange(16):
     plotCurveOverlay(cindex)
@@ -104,7 +107,7 @@ nameAxes(ax,None,'t (sec)','yt2-y2',supertitle = method)
 plt.subplots_adjust(hspace=0)
 fig.set_size_inches(16,9)
 
-plt.savefig('residuals')
+plt.savefig('plots/%s_%.2f_residuals'%(method,dt))
 
 ## calculate percent error
 plt.figure()
@@ -123,7 +126,7 @@ ax.plot(ts,mega_residuals2[0],lw=3,c=colors[2])
 
 nameAxes(ax,None,'t (sec)','|(yt-y)/yt|',subtitle = method)
 fig.set_size_inches(8,4.5)
-plt.savefig('percent_errors')
+plt.savefig('plots/%s_%.2f_percent_errors'%(method,dt))
 
 fig,axs = plt.subplots(4,4,sharey=True,sharex=True)
 
@@ -139,7 +142,7 @@ ax.set_ylim(0,0.05)
 plt.subplots_adjust(hspace=0,wspace=0)
 
 fig.set_size_inches(24,24)
-plt.savefig('mega_percent_errors')
+plt.savefig('plots/%s_%.2f_mega_percent_errors'%(method,dt))
 
 ## avg percent error
 plt.figure()
@@ -152,4 +155,4 @@ ax.plot(ts,np.mean(np.abs(mega_residuals2),axis=0),lw=3,c=colors[2])
 
 nameAxes(ax,None,'t (sec)',r'$\langle$|(yt-y)/yt|$\rangle$',subtitle = method,supertitle='%d systems'%maxnum)
 fig.set_size_inches(8,4.5)
-plt.savefig('avg_percent_errors')
+plt.savefig('plots/%s_%.2f_avg_percent_errors'%(method,dt))
