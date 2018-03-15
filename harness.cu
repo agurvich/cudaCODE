@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
     char* inputFile;
     char* outputFile;
     int method_flag=0;
+    int out_flag = 1;
     double outer_dt=0.05;
     if(argc == 1){
         printf("Producing random input and output files\n");
@@ -87,7 +88,7 @@ int main(int argc, char** argv) {
     }
 
     // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 100000;
+    int numODE = 2048;
 
     // number of equations, e.g. 157
     int NEQN = 3;
@@ -146,7 +147,7 @@ int main(int argc, char** argv) {
     clock_t init_time = clock();
     while (t < tEnd ) {
         // write to output file before integrating, otherwise get minor phase shift
-        if(0){
+        if(out_flag){
             for (int j=0; j<numODE; j++){
                 fprintf(outputStream,"%.4f\t",t);
                 for (int i=0; i<NEQN;i++){
