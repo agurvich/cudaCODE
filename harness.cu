@@ -59,7 +59,7 @@ void generateSampleInput(int numODE,int NEQN, char* inputFile){
 int main(int argc, char** argv) {
     char* inputFile;
     char* outputFile;
-    int method_flag=0;
+    int method_flag=1;
     int out_flag = 1;
     double outer_dt=0.05;
     if(argc == 1){
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     }
 
     // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 2048;
+    int numODE = 1;
 
     // number of equations, e.g. 157
     int NEQN = 3;

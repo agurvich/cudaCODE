@@ -58,20 +58,29 @@ __device__ void rk4Step(double t, double * y, double * F, double h, double* g,  
         dydt(t+h, tempY, g, tempF, NEQN);
         double k3 = h * tempF[i];
 
+        //These K-values are for error checking
+        tempY[i] = y[i] + (7*k0 + 10*k1 + k3)/27;
+        dydt(t + 2*h/3, tempY, g, tempF, NEQN);
+        double k4 = h * tempF[i];
+
+        tempY[i] = y[i] + (28*k0 - 125*k1 + 546*k2 + 54*k3 - 378*k4)/625;
+        dydt(t + 2*h/10, tempY, g, tempF, NEQN);
+        double k5 = h * tempF[i];
+
+        double rk5Solution = y[i] + (14*k0 + 35*k3 + 162*k4 + 125*k5)/336;
+
         // combine using RK4 weighting
         yTemp[i]=y[i]+(k0 + 2*k1 +2*k2 + k3)/6;
 
-        double timeTemp = h + t;
-        //testing for error
-        double y2 = ((timeTemp * timeTemp) / 4) + 1.0;
-        y2 = y2 * y2;
+        
         //printf("y[i](%f)/y2(%f) - 1 = %f\n", y[i], y2, y[i]/y2 - 1);
 
 
         ////printf("About to calculate error using h = %f and t = %f\n meaning my timeTemp should be %f, but it is %f", h, t, h + t, timeTemp);
         
         //taking absolute difference between rk4 and riemann to determine eror
-        yErr[i] = 0; //fabs(yTemp[i] - (y[i] + F[i]*h));
+        yErr[i] = fabs(yTemp[i] - rk5Solution); //fabs(yTemp[i] - (y[i] + F[i]*h));
+        //printf("Error is %f\n", yErr[i]);
         //yErr[i]= yTemp[i]/(pow(((timeTemp)*(timeTemp)) / 4 + 1, 2)) - 1;
         //yErr[i] = (y[i]/y2) - 1;
         //printf("yErr[%d] = %f (abs(yTemp[%d](%f) - (y[%d](%f) + F[%d](%f)*h(%f)))\n", i, yErr[i], i, yTemp[i], i, y[i], i, F[i],h);
@@ -130,7 +139,7 @@ __device__ void
             //err = fmax(err, yErr[i]);
             ////printf("yErr = %f, y = %f, h = %f, f = %f\n", yErr[i], y[i], h, F[i] );
             //err = fmax(err, fabs(yErr[i]));
-            err = fmax (err , fabs(yErr[i] / fabs (yTemp[i])));
+            err = fmax (err , yErr[i]);
 
         }
         //printf("Error is calculated to be %f\n", err);
@@ -139,7 +148,8 @@ __device__ void
         //err /= eps ;
         
         // check if error too large
-        if (( err > 0.1) || isnan (err ) || ( nanFlag == 1)) {
+        if (( err > 0.000001) || isnan (err ) || ( nanFlag == 1)) {
+            printf("Failed error check, error is %f\n", err);
             //printf("Error is too large / wrong\n");
         // step failed , error too large
             if ( isnan (err ) || ( nanFlag == 1)) {
