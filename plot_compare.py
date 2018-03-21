@@ -13,14 +13,27 @@ method = 'rk4'
 
 dt = .05
 
+def readTiming(filename):
+    with file(filename,'r') as handle:
+        lines = handle.readlines()
+    return float(lines[-1])
+
 def make_plots(method,dt):
     if method == 'riemann':
         method_flag = 0
     elif method == 'rk4':
         method_flag = 1
+    elif method =='cpu_riemann':
+        method_flag = 3
+    elif method =='cpu_rk4':
+        method_flag = 4
+                
+    with h5py.File("catalog.hdf5",'a') as handle:
+        if "%d_%.2f"%(method_flag,dt) in handle.keys():
+            return
+    vals = np.genfromtxt('output/%d_%g_output.txt'%(method_flag,dt),unpack=2,skip_footer=1)
 
-
-    vals = np.genfromtxt('%d_%g_output.txt'%(method_flag,dt),unpack=1)
+    timing = readTiming('output/%d_%g_output.txt'%(method_flag,dt))
 
     tss = vals[0]
 
@@ -178,11 +191,29 @@ def make_plots(method,dt):
         my_group['abs_mean_pct_err0']=np.mean(np.abs(mega_residuals0),axis=0)
         my_group['abs_mean_pct_err1']=np.mean(np.abs(mega_residuals1),axis=0)
         my_group['abs_mean_pct_err2']=np.mean(np.abs(mega_residuals2),axis=0)
+        my_group['output_timing'] = timing
 
+def add_ideal_timings_to_catalog():
+    with h5py.File("catalog.hdf5",'a') as handle:
+        for method in ['riemann','rk4','cpu_riemann','cpu_rk4']:
 
+            if method == 'riemann':
+                method_flag = 0
+            elif method == 'rk4':
+                method_flag = 1
+            elif method =='cpu_riemann':
+                method_flag = 3
+            elif method =='cpu_rk4':
+                method_flag = 4
+
+            for dt in [0.01,0.05,0.1,0.5,1]:
+                my_group = handle[("%d_%.2f"%(method_flag,dt))]
+                for numODE in [32,128,512,2048,8192,32768,100000]:
+                    my_group["%d_ideal_timing"%numODE]=readTiming(
+                        'timings/%d_timings/%d_%g_time_output.txt'%(numODE,method_flag,dt))
 
 def run_all():
-    for method in ['riemann','rk4']:
+    for method in ['riemann','rk4','cpu_riemann','cpu_rk4']:
         for dt in [0.01,0.05,0.1,0.5,1]:
             print 'working on',method,dt
             make_plots(method,dt)
@@ -190,38 +221,80 @@ def run_all():
 def compare_catalog():
     errsss= []
     dts = [0.01,0.05,0.1,0.5,1]
+    timings ={}
+    numODEs=[32,128,512,2048,8192,32768,100000]
     with h5py.File("catalog.hdf5",'r') as handle:
-        for method in ['riemann','rk4']:
+        for method in ['riemann','rk4','cpu_riemann','cpu_rk4']:
 
             if method == 'riemann':
                 method_flag = 0
             elif method == 'rk4':
                 method_flag = 1
-
+            elif method =='cpu_riemann':
+                method_flag = 3
+            elif method =='cpu_rk4':
+                method_flag = 4
+                
             errss =[]
             for i in xrange(3):
                 errs = []
                 for dt in dts:
                     group = handle["%d_%.2f"%(method_flag,dt)]
                     errs+=[np.mean(group['abs_mean_pct_err%d'%i])] ## average over time
+                    for numODE in numODEs:
+                        timing = np.array(group["%d_ideal_timing"%numODE]).reshape(1)[0]
+                        timings[(method,dt,numODE,'ideal')]=timing
+                    timings[(method,dt,2048,'output')]=np.array(group["output_timing"]).reshape(1)[0]
+                    
                 errss+=[errs]
             errsss+=[errss]
 
+
+
     colors = get_distinct(3)
-    print np.shape(errsss)
     for i in xrange(3):
         label = 'riemann' if i ==0 else None
         plt.plot(dts,errsss[0][i],'--',label=label,lw=3,c=colors[i])
         label = 'rk4' if i ==0 else None
         plt.plot(dts,errsss[1][i],label=label,lw=3,c=colors[i])
+        ## cpu methods
+        #plt.plot(dts,errsss[2][i],label=label,lw=3,c=colors[i])
+        #plt.plot(dts,errsss[3][i],label=label,lw=3,c=colors[i])
+
     nameAxes(plt.gca(),None,'h (s)','avg |pct error|',make_legend=1,logflag=(1,1))
     plt.gcf().set_size_inches(16,9)
     plt.savefig('plots/error_vs_stepsize.png')
     plt.close()
 
+    fig = plt.figure()
+    colors = get_distinct(2)
+    xs = numODEs
+    for i,method in enumerate(['riemann','rk4']):
+        ys = [
+            timings[('cpu_%s'%method,0.05,numODE,'ideal')]/timings[(method,0.05,numODE,'ideal')]
+            for numODE in numODEs]
+        plt.plot(xs,ys,c=colors[i],lw=3,label=method)
+    nameAxes(plt.gca(),None,'numeODEs','speedup',make_legend=1,logflag=(1,0),subtitle='step size 0.05')
+    fig.set_size_inches(16,9)
+    plt.savefig('plots/speedup_vs_ODE.png')
+    plt.close(fig)
+    fig = plt.figure()
+    xs = dts
+    for i,method in enumerate(['riemann','rk4']):
+        ys = [
+            timings[('cpu_%s'%method,dt,100000,'ideal')]/timings[(method,dt,100000,'ideal')]
+            for dt in dts]
+        plt.plot(xs,ys,c=colors[i],lw=3,label=method)
+    nameAxes(plt.gca(),None,'step size','speedup',subtitle='100000 systems',make_legend=1,logflag=(1,0))
+    plt.gcf().set_size_inches(16,9)
+    plt.savefig('plots/speedup_vs_stepsize.png')
+    plt.close(fig)
+
 def main():
     #run_all()
-    compare_catalog()
+    #add_ideal_timings_to_catalog()
+    make_plots('rk4',1)
+    #compare_catalog()
     
 main()
 
