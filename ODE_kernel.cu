@@ -149,7 +149,7 @@ __device__ void
         
         // check if error too large
         if (( err > 0.000001) || isnan (err ) || ( nanFlag == 1)) {
-            printf("Failed error check, error is %f\n", err);
+            //printf("Failed error check, error is %f\n", err);
             //printf("Error is too large / wrong\n");
         // step failed , error too large
             if ( isnan (err ) || ( nanFlag == 1)) {

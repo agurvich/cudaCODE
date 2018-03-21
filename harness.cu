@@ -62,6 +62,13 @@ int main(int argc, char** argv) {
     int method_flag=1;
     int out_flag = 1;
     double outer_dt=0.05;
+
+    // number of ode systems ("elements"), e.g. 10 million
+    int numODE = 2048;
+
+    // number of equations, e.g. 157
+    int NEQN = 3;
+
     if(argc == 1){
         printf("Producing random input and output files\n");
         inputFile = "sample_input.txt";
@@ -87,11 +94,21 @@ int main(int argc, char** argv) {
         printf("Using method %d with step size %.2f\n",method_flag,outer_dt);
     }
 
-    // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 1;
+    else if(argc == 6){
+        out_flag=0;
+        printf("Making timing data, writing no output \n",method_flag,outer_dt);
 
-    // number of equations, e.g. 157
-    int NEQN = 3;
+        inputFile = argv[1];
+        outputFile = argv[2];
+        printf("Using %s as input file and %s as output file\n", inputFile, outputFile);
+
+        method_flag = atoi(argv[3]);
+        outer_dt = atof(argv[4]);
+        printf("Using method %d with step size %.2f\n",method_flag,outer_dt);
+
+        numODE = atoi(argv[5]);
+
+    }
 
     // overwrite sampleInput
     if(argc < 3 || 1){ 
@@ -143,7 +160,8 @@ int main(int argc, char** argv) {
 
     // set initial time
     double t = t0;
-    double tNext = t + h; FILE* outputStream = fopen(outputFile,"w"); 
+    double tNext = t + h; 
+    FILE* outputStream = fopen(outputFile,"w"); 
     clock_t init_time = clock();
     while (t < tEnd ) {
         // write to output file before integrating, otherwise get minor phase shift
