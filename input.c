@@ -55,27 +55,6 @@ void getStats(char* inputFile,int* NEQN, int* numODE){
     //printf("There are %d equations per element, count = %d\n", *NEQN, count);
 }
 
-void transposeInputs(double * y, double * g, int NEQN, int numODE){
-    double tempy[NEQN*numODE];
-    double tempg[NEQN*numODE]; 
-
-    // do the transpose and store the values in temporary arrays
-    for (int i=0; i < NEQN; i++){
-        for (int j=0; j < numODE; j++){
-            // x0,y0,z0 | x1,y1,z1 | ... -> x0,x1,x2, ... | y0,y1,y2, ...
-            tempy[j+numODE*i]=y[i+NEQN*j];
-            tempg[j+numODE*i]=g[i+NEQN*j];
-        }
-    }
-
-    // copy it back to the old pointers, where the memory is allocated
-    for (int k=0; k<NEQN*numODE; k++){
-        y[k]=tempy[k];
-        g[k]=tempg[k];
-    }
-
-}
-
 void parseInputs(char* inputFile, double * y, double * g, int* NEQN, int* numODE){
 	
 	char line[1024];
