@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     int numODE = 2048;
 
     // number of equations, e.g. 157
-    int NEQN = 3;
+    int NEQN = 32;
 
     if(argc == 1){
         printf("Producing random input and output files\n");
@@ -129,6 +129,15 @@ int main(int argc, char** argv) {
 
 
     parseInputs(inputFile, y, g, &NEQN, &numODE);
+
+#ifdef THREADTOELEMENTBINDING
+    // transpose inputs for global memory coalescence, only helps if using threads as microprocessors
+    // do not transpose if we're using the CPU!!
+    if (method_flag < 3){
+        transposeInputs(y, g, &NEQN, &numODE);
+    }
+#endif
+
     printf("Finished filling y and g matrices with their numbers\n");
     printf("Parsed Inputs\n");
 

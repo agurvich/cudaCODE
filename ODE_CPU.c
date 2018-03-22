@@ -3,7 +3,7 @@
 #include <time.h>
 #include <math.h>
 
-#define NUM_OF_EQUATIONS_PER_ELEMENT 3
+#define NUM_OF_EQUATIONS_PER_ELEMENT 32
 
 void cpu_dydt(double t, double * y, double * g, double * F,int NEQN){
     F[0] = g[0];
