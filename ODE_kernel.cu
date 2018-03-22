@@ -62,7 +62,7 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN, int
 }
 
  __device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN, int numODE){
-    printf("Made it into riemann step! %.2f \n",y[0]);
+
 // pointer will point to start of element
 #ifdef THREADTOELEMENTBINDING
     for (int i=0; i < NEQN; i++){
@@ -71,6 +71,7 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN, int
         // assume riemann is super awesome
         yErr[i*numODE]=0;
     }
+    //printf("Made it into riemann step! %.2f \n",h);
 #else
     // each thread will work on its equation
     if (threadIdx.x < NEQN){
@@ -195,6 +196,7 @@ __device__ void rk4Step(
 __device__ void
  innerstep ( double t, const double tEnd , double * g,
  double * y, int NEQN,int numODE, int method_flag) {
+
     int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
     // maximum and minimum allowable step sizes
     const double hMax = fabs ( tEnd - t);
@@ -202,8 +204,10 @@ __device__ void
 
     // initial step size
     double h = 0.5 * fabs ( tEnd - t);
+
     // integrate until specified end time
     while (t < tEnd ) {
+        printf("Step %.2f| %.2f \t",t,h);
         // for implicit solver, there would be a step size estimate here
         // maybe every 25 steps or something so overhead is invested so that
         // you don't reject steps as often. 
@@ -228,8 +232,8 @@ __device__ void
         else if (method_flag ==1) rk4Step(t,
             (y + tid), F, h, (g + tid), yTemp , yErr, NEQN, numODE);
 #else
-        double yTemp [ NUM_OF_EQUATIONS_PER_ELEMENT ];
-        double yErr [ NUM_OF_EQUATIONS_PER_ELEMENT ];
+        __shared__ double yTemp [ NUM_OF_EQUATIONS_PER_ELEMENT ];
+        __shared__ double yErr [ NUM_OF_EQUATIONS_PER_ELEMENT ];
         
         // evaluate derivative
         double F[ NUM_OF_EQUATIONS_PER_ELEMENT ];
@@ -270,6 +274,7 @@ __device__ void
         //err /= eps ;
         
         // check if error too large
+        printf("error is: %.2f\n",err);
         if (( err > 0.000001) || isnan (err ) || ( nanFlag == 1)) {
             //printf("Failed error check, error is %f\n", err);
             //printf("Error is too large / wrong\n");
@@ -280,6 +285,7 @@ __device__ void
             else {
                 //h = fmax ( SAFETY * h * pow(err , PSHRNK ), P1 * h);
                 h *= P1;
+                //printf("step passed");
             }
             if(h < 0.0000000001){
                 //printf("h has bottomed out\n");

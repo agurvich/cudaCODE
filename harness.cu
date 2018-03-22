@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     double outer_dt=0.05;
 
     // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 1;
+    int numODE = 2;
 
     // number of equations, e.g. 157
     int NEQN = 32;
