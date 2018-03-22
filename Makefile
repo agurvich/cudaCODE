@@ -10,7 +10,7 @@ CUFILES		:= harness.cu
 CUDEPS		:= ODE_kernel.cu;
 
 
-hellomake: harness.cu ODE_kernel.cu; nvcc -arch=sm_20 -o $(EXECUTABLE) $(CUFILES) $(CUDEPS) 
+hellomake: harness.cu ODE_kernel.cu; nvcc -Xptxas -O1 -arch=sm_20 -o $(EXECUTABLE) $(CUFILES) $(CUDEPS) 
 
 clean: 
 	rm POSTERR #*.o

@@ -21,6 +21,9 @@
 #define NUM_OF_EQUATIONS_PER_ELEMENT 32
 const float eps = 1.0e-10;
 
+__device__ void dummy_dydt(double t, double * y, double * g, double * F, int NEQN, int numODE){
+}
+
 __device__ void dydt(double t, double * y, double * g, double * F, int NEQN, int numODE){
     // data pointers will be iterated so this thread's 0 is appropriate,
     // then need to move a stride away for the next element
@@ -53,11 +56,13 @@ __device__ void dydt(double t, double * y, double * g, double * F, int NEQN, int
     }
 
     // make sure all the threads in the block have set the dydt
-    __syncthreads();
+    //__syncthreads();
 #endif
+
 }
 
  __device__ void riemannStep(double * y, double * F, double h, double * yTemp, double *  yErr,int NEQN, int numODE){
+    printf("Made it into riemann step! %.2f \n",y[0]);
 // pointer will point to start of element
 #ifdef THREADTOELEMENTBINDING
     for (int i=0; i < NEQN; i++){
@@ -124,10 +129,11 @@ __device__ void rk4Step(
 #else
         yErr[i*numODE] = 0; 
 #endif
+    }
 
 #else
-    __shared__ double tempF[NUM_OF_EQUATIONS_PER_ELEMENT];
-    __shared__ double tempY[NUM_OF_EQUATIONS_PER_ELEMENT];
+    double tempF[NUM_OF_EQUATIONS_PER_ELEMENT];
+    double tempY[NUM_OF_EQUATIONS_PER_ELEMENT];
     // each thread gets a number of equations
     if (threadIdx.x < NEQN){
         //calculate k0
@@ -184,22 +190,11 @@ __device__ void rk4Step(
 
 #endif
 
-        //printf("y[i](%f)/y2(%f) - 1 = %f\n", y[i], y2, y[i]/y2 - 1);
-
-        ////printf("About to calculate error using h = %f and t = %f\n meaning my timeTemp should be %f, but it is %f", h, t, h + t, timeTemp);
-        
-
-        //printf("Error is %f\n", yErr[i]);
-        //yErr[i]= yTemp[i]/(pow(((timeTemp)*(timeTemp)) / 4 + 1, 2)) - 1;
-        //yErr[i] = (y[i]/y2) - 1;
-        //printf("yErr[%d] = %f (abs(yTemp[%d](%f) - (y[%d](%f) + F[%d](%f)*h(%f)))\n", i, yErr[i], i, yTemp[i], i, y[i], i, F[i],h);
-        ////printf("I calculated the error to be:\n %f(yErr[%d]) = %f(yTemp[%d]) / (pow(%d * %d (tempTime) / 4 + 1, 2)) - 1\n", yErr[i], i, yTemp[i], i, timeTemp, timeTemp);
-    }
 }
 
 __device__ void
  innerstep ( double t, const double tEnd , double * g,
- double * y, int NEQN, int method_flag) {
+ double * y, int NEQN,int numODE, int method_flag) {
     int tid = threadIdx.x + ( blockDim.x * blockIdx.x);
     // maximum and minimum allowable step sizes
     const double hMax = fabs ( tEnd - t);
@@ -233,19 +228,19 @@ __device__ void
         else if (method_flag ==1) rk4Step(t,
             (y + tid), F, h, (g + tid), yTemp , yErr, NEQN, numODE);
 #else
-        __shared__ double yTemp [ NUM_OF_EQUATIONS_PER_ELEMENT ];
-        __shared__ double yErr [ NUM_OF_EQUATIONS_PER_ELEMENT ];
+        double yTemp [ NUM_OF_EQUATIONS_PER_ELEMENT ];
+        double yErr [ NUM_OF_EQUATIONS_PER_ELEMENT ];
         
         // evaluate derivative
-        __shared__ double F[ NUM_OF_EQUATIONS_PER_ELEMENT ];
+        double F[ NUM_OF_EQUATIONS_PER_ELEMENT ];
         // data should be stored s.t. memory acces is coalesced
         // x0,y0,z0 | x1,y1,z1 | ... 
-        dydt (t, (y + (blockIdx.x * NEQN)), (g + (blockIdx.x * NEQN)), F, NEQN);
+        dydt (t, (y + (blockIdx.x * NEQN)), (g + (blockIdx.x * NEQN)), F, NEQN, numODE);
 
         // take a trial step
-        if (method_flag == 0) riemannStep ((y + (blockIdx.x * NEQN)), F, h, yTemp , yErr, NEQN);
+        if (method_flag == 0) riemannStep ((y + (blockIdx.x * NEQN)), F, h, yTemp , yErr, NEQN,numODE);
         else if (method_flag ==1) rk4Step(t,
-            (y + (blockIdx.x * NEQN)), F, h, (g + (blockIdx.x * NEQN)), yTemp , yErr, NEQN);
+            (y + (blockIdx.x * NEQN)), F, h, (g + (blockIdx.x * NEQN)), yTemp , yErr, NEQN,numODE);
 
 #endif
 
@@ -304,18 +299,19 @@ __device__ void
             }
             // ensure step size is bounded
             h = fmax (hMin , fmin (hMax , h));
-            for (int i = 0; i < NEQN ; ++i)
+            for (int i = 0; i < NEQN ; ++i){
                 y[tid + i*numODE] = yTemp [tid + i*numODE];
+            }
         }
-    }
 
 #else
-    // automatically accept the step if we're using blocks, should do an error check 
-    // and a synchronization in the future...
-    y[tid]=yTemp[tid];
+        // automatically accept the step if we're using blocks, should do an error check 
+        // and a synchronization in the future...
+        y[tid]=yTemp[tid];
 #endif
-    __syncthreads();
- }
+        __syncthreads();
+    }
+}
 
 __global__ void
 intDriver ( const double t, const double tEnd , const int numODE , 
@@ -327,9 +323,10 @@ intDriver ( const double t, const double tEnd , const int numODE ,
 
     // ensure thread within limit
     if (tid < numODE ) {
-        innerstep(t, tEnd , gGlobal, yGlobal, NEQN, method_flag);
+        innerstep(t, tEnd , gGlobal, yGlobal, NEQN, numODE, method_flag);
      }
 }
+
 
 
 

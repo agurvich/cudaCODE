@@ -55,7 +55,7 @@ void getStats(char* inputFile,int* NEQN, int* numODE){
     //printf("There are %d equations per element, count = %d\n", *NEQN, count);
 }
 
-void transposeInput(double * y, double * g, int NEQN, int numODE){
+void transposeInputs(double * y, double * g, int NEQN, int numODE){
     double tempy[NEQN*numODE];
     double tempg[NEQN*numODE]; 
 

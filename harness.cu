@@ -59,23 +59,23 @@ void generateSampleInput(int numODE,int NEQN, char* inputFile){
 int main(int argc, char** argv) {
     char* inputFile;
     char* outputFile;
-    int method_flag=1;
+    int method_flag=0;
     int out_flag = 1;
     double outer_dt=0.05;
 
     // number of ode systems ("elements"), e.g. 10 million
-    int numODE = 2048;
+    int numODE = 1;
 
     // number of equations, e.g. 157
     int NEQN = 32;
 
     if(argc == 1){
         printf("Producing random input and output files\n");
-        inputFile = "sample_input.txt";
-        outputFile = "sample_output.txt";
+        inputFile = "random_input.txt";
+        outputFile = "random_output.txt";
     }
     else if(argc == 2){
-        inputFile = "sample_input.txt";
+        inputFile = "random_input.txt";
         outputFile = argv[1];
         printf("Producing random input and writing it to %s\n", argv[1]);
     }
@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
     // transpose inputs for global memory coalescence, only helps if using threads as microprocessors
     // do not transpose if we're using the CPU!!
     if (method_flag < 3){
-        transposeInputs(y, g, &NEQN, &numODE);
+        transposeInputs(y, g, NEQN, numODE);
     }
 #endif
 
@@ -153,6 +153,7 @@ int main(int argc, char** argv) {
     gDevice = allocateDeviceAndCopy(g,numODE * NEQN * sizeof ( double ));
     printf("Copied over my y and g to CUDA\n");    
 
+#ifdef THREADTOELEMENTBINDING
     // setup grid dimensions
     int blockSize, gridSize ;
     if ( numODE <= 1024) {
@@ -166,7 +167,12 @@ int main(int argc, char** argv) {
 
     dim3 dimBlock ( blockSize , 1);
     dim3 dimGrid ( gridSize, 1);
+#else
+    // TODO need to make a multi dim grid for very large input
+    dim3 dimBlock ( NEQN , 1);
+    dim3 dimGrid ( numODE, 1);
 
+#endif
     // set initial time
     double t = t0;
     double tNext = t + h; 
